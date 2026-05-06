@@ -4,7 +4,7 @@
 // functions instead of the local data globals.
 // ═══════════════════════════════════════════════
 
-const API = 'http://localhost:3001/api';
+const API = 'https://uniroute-ii-production.up.railway.app/api';
 
 // ── Generic fetch with error handling ──────────
 async function apiFetch(path) {
