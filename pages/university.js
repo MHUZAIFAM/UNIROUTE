@@ -16,9 +16,7 @@ function _isLight() {
 // Dark mode : fades to near-black on the right (overlay adds bottom vignette)
 // Light mode: fades to white on the right    (overlay is hidden via CSS)
 function _coverGradient() {
-  return _isLight()
-    ? 'linear-gradient(to right, #f5a623 0%, #f5a62355 40%, #ffffff 100%)'
-    : 'linear-gradient(to right, #f5a623 0%, #f5a62322 45%, #0f0f0f 100%)';
+  return 'linear-gradient(135deg, #f5a623 0%, #c47d0e 60%, #8a5500 100%)';
 }
 
 async function renderUniversity(params={}) {
