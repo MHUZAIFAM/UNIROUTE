@@ -6,14 +6,29 @@ const FOCUS_MAP    = { CO:'Comprehensive', FO:'Focused', FC:'Fully Comprehensive
 const RESEARCH_MAP = { VH:'Very High', HI:'High', MD:'Medium', LO:'Low' };
 const SIZE_MAP     = { S:'Small', M:'Medium', L:'Large', XL:'Extra Large' };
 
+// ── Theme helper ───────────────────────────────
+function _isLight() {
+  return document.documentElement.getAttribute('data-theme') === 'light';
+}
+
+// ── Cover gradient ─────────────────────────────
+// Always gold (#f5a623) on the left.
+// Dark mode : fades to near-black on the right (overlay adds bottom vignette)
+// Light mode: fades to white on the right    (overlay is hidden via CSS)
+function _coverGradient() {
+  return _isLight()
+    ? 'linear-gradient(to right, #f5a623 0%, #f5a62355 40%, #ffffff 100%)'
+    : 'linear-gradient(to right, #f5a623 0%, #f5a62322 45%, #0f0f0f 100%)';
+}
+
 async function renderUniversity(params={}) {
   const dv = document.getElementById('dynamicView');
 
-  // Show loading cover immediately
   dv.innerHTML = `
     <div class="page-wrap uni-detail-wrap">
       ${backBtn('Back')}
-      <div class="detail-cover" style="background:linear-gradient(160deg,#2a2a2a 0%,#181818 55%,#0f0f0f 100%)">
+      <div class="detail-cover" style="background:${_coverGradient()}">
+
         <div class="detail-cover-content">
           <div class="detail-identity">
             <span class="detail-alpha2">—</span>
@@ -49,7 +64,6 @@ let _currentUni = null;
 function _switchTab(tab) {
   if (!_currentUni) return;
   if (tab === 'nearby') {
-    // Update active tab visually then load
     document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===2));
     _loadNearby(_currentUni);
   } else {
@@ -58,12 +72,12 @@ function _switchTab(tab) {
 }
 
 function _renderUniversityData(u, activeTab) {
-  _currentUni = u; // always update
+  _currentUni = u;
   const dv = document.getElementById('dynamicView');
   if (!dv) return;
 
   const alpha2  = (u.alpha2||'').toUpperCase() || '—';
-  const rc      = rankColor(u.rank);
+  const rc      = rankColor(u.rank);   // still used for badges, bars, pills
   const rankTxt = u.rank ? `#${u.rank}` : 'Unranked';
   const domain  = u.domain || null;
 
@@ -77,7 +91,8 @@ function _renderUniversityData(u, activeTab) {
     <div class="page-wrap uni-detail-wrap">
       ${backBtn('Back')}
 
-      <div class="detail-cover" style="background:linear-gradient(160deg,${rc}55 0%,#181818 55%,#0f0f0f 100%)">
+      <div class="detail-cover" style="background:${_coverGradient()}">
+
         <div class="detail-cover-content">
           <div class="detail-identity">
             <span class="detail-alpha2">${alpha2}</span>
@@ -196,9 +211,7 @@ async function _loadNearby(u) {
   const tabContent = document.getElementById('uniTabContent');
   if (!tabContent) return;
 
-  // Update tab active state
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===2));
-
   tabContent.innerHTML = `<div class="api-loading"><div class="loading-spinner"></div><p>Loading universities in ${escHtml(u.country)}…</p></div>`;
 
   try {

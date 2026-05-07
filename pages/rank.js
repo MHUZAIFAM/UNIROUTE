@@ -55,8 +55,9 @@ async function renderRank(params={}) {
     if (!_rankLists) {
       const countries = await apiGetCountries();
       _rankLists = {
-        countries: countries.map(c=>c.name).sort(),
-        regions:   [...new Set(countries.map(c=>c.region).filter(Boolean))].sort(),
+        countries:      countries.map(c=>c.name).sort(),
+        regions:        [...new Set(countries.map(c=>c.region).filter(Boolean))].sort(),
+        allCountryData: countries, // needed for region→country filtering
       };
     }
 
@@ -72,7 +73,25 @@ async function renderRank(params={}) {
       clearTimeout(timer);
       timer = setTimeout(() => _rankFilter(), 400);
     });
-    document.getElementById('rankRegion')?.addEventListener('change', _rankFilter);
+    document.getElementById('rankRegion')?.addEventListener('change', () => {
+      const newRegion = document.getElementById('rankRegion').value;
+      const cntSel    = document.getElementById('rankCountry');
+      if (!cntSel || !_rankLists) return;
+
+      // Filter countries to selected region using cached API data
+      const validCountries = newRegion
+        ? _rankLists.countries.filter(cn => {
+            const found = _rankLists.allCountryData?.find(c => c.name === cn);
+            return found ? found.region === newRegion : true;
+          })
+        : _rankLists.countries;
+
+      // Rebuild country dropdown
+      cntSel.innerHTML = '<option value="">All Countries</option>' +
+        validCountries.map(cn => `<option value="${escHtml(cn)}">${escHtml(cn)}</option>`).join('');
+
+      _rankFilter();
+    });
     document.getElementById('rankCountry')?.addEventListener('change', _rankFilter);
 
     // Load rankings

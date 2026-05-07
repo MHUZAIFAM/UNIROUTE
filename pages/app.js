@@ -4,23 +4,17 @@
 
 const State = { view:'home', historyStack:[] };
 
-// ── Flag emoji ─────────────────────────────────
-function flagEmoji(alpha2) {
-  if (!alpha2 || alpha2.length !== 2) return '🏫';
-  const b = 0x1F1E6;
-  return String.fromCodePoint(b + alpha2.toUpperCase().charCodeAt(0) - 65) +
-         String.fromCodePoint(b + alpha2.toUpperCase().charCodeAt(1) - 65);
-}
-
 // ── Rank badge color ───────────────────────────
 function rankColor(rank) {
-  const r = parseInt(rank);
-  if (!r)      return '#6550a3';
-  if (r <= 10) return '#f5a623';
-  if (r <= 50) return '#e8e8e8';
-  if (r <= 100) return '#b0b0b0';
-  if (r <= 200) return '#888888';
-  return '#555555';
+  const r       = parseInt(rank);
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+  if (!r)       return isLight ? '#7c6fcd' : '#6550a3';
+  if (r <= 10)  return '#f5a623';                          // amber — same both modes
+  if (r <= 50)  return isLight ? '#5b4fcf' : '#e8e8e8';   // deep purple / light grey
+  if (r <= 100) return isLight ? '#7c6fcd' : '#b0b0b0';   // medium purple / mid grey
+  if (r <= 200) return isLight ? '#a89ddd' : '#888888';   // soft lilac / dark grey
+  return isLight ? '#c4bce8' : '#555555';                 // pale lilac / dim grey
 }
 
 // ── Toast ──────────────────────────────────────
@@ -50,16 +44,15 @@ function _render(viewId, params={}) {
   State.view = viewId;
   document.getElementById('mainContent').scrollTop = 0;
 
-  // Sidebar active state
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const sb = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
   if (sb) sb.classList.add('active');
 
-  // Clear dynamic view
   const dv = document.getElementById('dynamicView');
   dv.innerHTML = '';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
+  // Pages are async — call without await so UI stays responsive
   switch(viewId) {
     case 'home':       renderHome();             break;
     case 'countries':  renderCountries(params);  break;
@@ -82,34 +75,34 @@ function _render(viewId, params={}) {
 // ── Breadcrumb ─────────────────────────────────
 function updateBreadcrumb(viewId, params={}) {
   const bc = document.getElementById('breadcrumb');
-  let html = `<span class="bc-item" onclick="navigateTo('home')">Home</span>`;
 
-  if (viewId === 'home') {
-    // nothing extra
-  } else if (viewId === 'countries' && params.country) {
-    html += `<span class="bc-sep">›</span>
-             <span class="bc-item" onclick="navigateTo('countries')">Countries</span>
-             <span class="bc-sep">›</span>
-             <span class="bc-item bc-current">${params.country}</span>`;
+  // Home: empty — UNIROUTE logo is the home indicator
+  if (viewId === 'home') { bc.innerHTML = ''; return; }
+
+  let html = '';
+
+  if (viewId === 'countries' && params.country) {
+    html = `<span class="bc-item" onclick="navigateTo('home')">Home</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item" onclick="navigateTo('countries')">Countries</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item bc-current">${params.country}</span>`;
   } else if (viewId === 'university' && params.id) {
-    const u = UNI_BY_ID[params.id];
-    if (u) {
-      const esc = u.country.replace(/'/g, "\\'");
-      html += `<span class="bc-sep">›</span>
-               <span class="bc-item" onclick="navigateTo('countries')">Countries</span>
-               <span class="bc-sep">›</span>
-               <span class="bc-item" onclick="navigateTo('countries',{country:'${esc}'})">${u.country}</span>
-               <span class="bc-sep">›</span>
-               <span class="bc-item bc-current">${u.name}</span>`;
-    }
+    html = `<span class="bc-item" onclick="navigateTo('home')">Home</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item" onclick="navigateTo('countries')">Countries</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item bc-current">University</span>`;
   } else if (viewId === 'search' && params.q) {
-    html += `<span class="bc-sep">›</span>
-             <span class="bc-item" onclick="navigateTo('search')">Search</span>
-             <span class="bc-sep">›</span>
-             <span class="bc-item bc-current">"${escHtml(params.q)}"</span>`;
-  } else if (viewId !== 'home') {
-    html += `<span class="bc-sep">›</span>
-             <span class="bc-item bc-current">${viewId.charAt(0).toUpperCase()+viewId.slice(1)}</span>`;
+    html = `<span class="bc-item" onclick="navigateTo('home')">Home</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item" onclick="navigateTo('search')">Search</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item bc-current">"${escHtml(params.q)}"</span>`;
+  } else {
+    html = `<span class="bc-item" onclick="navigateTo('home')">Home</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-item bc-current">${viewId.charAt(0).toUpperCase()+viewId.slice(1)}</span>`;
   }
   bc.innerHTML = html;
 }
@@ -118,7 +111,6 @@ function updateBreadcrumb(viewId, params={}) {
 function renderComingSoon(viewId) {
   document.getElementById('dynamicView').innerHTML = `
     <div class="coming-soon">
-      <div class="cs-icon">🚧</div>
       <h2>${viewId.charAt(0).toUpperCase()+viewId.slice(1)}</h2>
       <p>This section is coming soon.</p>
       <button class="back-btn" onclick="navigateTo('home')">← Back to Home</button>
@@ -127,11 +119,10 @@ function renderComingSoon(viewId) {
 
 // ── Shared university card ─────────────────────
 function uniCardHTML(u) {
-  const rc       = rankColor(u.rank);
-  const rankTxt  = u.rank ? `#${u.rank}` : 'Unranked';
-  const domain   = u.domains && u.domains[0] ? u.domains[0] : '';
-  // Always use alpha2 text badge — consistent, no emoji overlap issues
-  const alpha2   = u.alpha2 ? u.alpha2.toUpperCase() : '—';
+  const rc      = rankColor(u.rank);
+  const rankTxt = u.rank ? `#${u.rank}` : 'Unranked';
+  const domain  = u.domain || (u.domains && u.domains[0]) || '';
+  const alpha2  = u.alpha2 ? u.alpha2.toUpperCase() : '—';
   return `
     <div class="uni-card" onclick="navigateTo('university',{id:${u.id}})">
       <div class="uni-card-top" style="background:linear-gradient(135deg,${rc}40,${rc}18)">
@@ -140,15 +131,15 @@ function uniCardHTML(u) {
       </div>
       <div class="uni-card-body">
         <h3 class="uni-card-name">${escHtml(u.name)}</h3>
-        <p class="uni-card-loc">📍 ${u.state ? escHtml(u.state)+', ' : ''}${escHtml(u.country)}</p>
-        ${domain ? `<p class="uni-card-domain">🌐 ${escHtml(domain)}</p>` : ''}
+        <p class="uni-card-loc">${u.state ? escHtml(u.state)+', ' : ''}${escHtml(u.country)}</p>
+        ${domain ? `<p class="uni-card-domain">${escHtml(domain)}</p>` : ''}
         ${u.overall ? `<div class="uni-qs-row"><span class="qs-label">QS Score</span><span class="qs-val">${u.overall}</span></div>` : ''}
         <button class="uni-view-btn">View Details →</button>
       </div>
     </div>`;
 }
 
-// ── Skeleton card (loading placeholder) ────────
+// ── Skeleton cards ─────────────────────────────
 function skeletonCardsHTML(count=6) {
   return Array(count).fill(`
     <div class="uni-card skeleton-card">
@@ -168,9 +159,7 @@ function escHtml(s) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function backBtn(label) {
-  return ``; // disabled
-}
+function backBtn(label) { return ''; }
 
 function paginate(items, page, pageSize) {
   const start = page * pageSize;
@@ -198,38 +187,49 @@ function toggleMobileSidebar() {
 
 // ── Splash screen ──────────────────────────────
 function showSplash() {
-  // Animate bar from 0→100% while data.js parses
-  const bar   = document.getElementById('splashBar');
-  const count = document.getElementById('splashCount');
+  const bar    = document.getElementById('splashBar');
+  const count  = document.getElementById('splashCount');
+  const splash = document.getElementById('splash');
+
+  // Animate bar 0 → 100% over ~1.2s — no longer depends on data.js
   let p = 0;
   const iv = setInterval(() => {
-    p = Math.min(p + Math.random() * 12, 92);
+    p = Math.min(p + Math.random() * 18, 95);
     bar.style.width = p + '%';
-  }, 120);
+  }, 80);
 
-  // data.js is already loaded synchronously by the time DOMContentLoaded fires
-  // So we just let the animation run briefly then dismiss
   setTimeout(() => {
     clearInterval(iv);
     bar.style.width = '100%';
-    if (count) count.textContent = `${UNIVERSITIES.length.toLocaleString()} universities loaded`;
+    if (count) count.textContent = '10,876 universities';
     setTimeout(() => {
-      const splash = document.getElementById('splash');
       splash.classList.add('splash-hide');
       setTimeout(() => { splash.style.display = 'none'; }, 500);
-    }, 400);
-  }, 900);
+    }, 300);
+  }, 1200);
 }
 
 // ── Init ───────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+
+  // ── Theme init ───────────────────────────────
+  const savedTheme = localStorage.getItem('uniroute-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  const themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) themeBtn.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const cur  = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('uniroute-theme', next);
+    document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+  });
 
   showSplash();
 
   // Desktop sidebar toggle
   document.getElementById('sidebarToggle').addEventListener('click', () => {
     const sb = document.getElementById('sidebar');
-    // On mobile: open/close drawer; on desktop: collapse/expand
     if (window.innerWidth <= 768) {
       toggleMobileSidebar();
     } else {
@@ -237,11 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Mobile hamburger in header
+  // Mobile hamburger
   const mobileBtn = document.getElementById('mobileMenuBtn');
   if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileSidebar);
 
-  // Overlay click closes sidebar
+  // Overlay
   document.getElementById('sidebarOverlay').addEventListener('click', closeMobileSidebar);
 
   // Nav buttons
@@ -259,15 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
     d.addEventListener('click', () => carouselGo(parseInt(d.dataset.index))));
   setInterval(() => carouselGo((ci+1) % 3), 3500);
 
-  // Carousel CTAs
   document.querySelectorAll('.card-cta').forEach(btn =>
     btn.addEventListener('click', () => navigateTo(btn.dataset.view)));
-
-  // See all buttons
   document.querySelectorAll('.see-all-btn').forEach(btn =>
     btn.addEventListener('click', () => navigateTo(btn.dataset.view)));
-
-  // Home chip clicks
   document.querySelectorAll('.chip[data-program]').forEach(chip =>
     chip.addEventListener('click', () => navigateTo('search', { q: chip.dataset.program })));
 
@@ -278,8 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function fixDomain(domain) {
   if (!domain) return '#';
   const parts = domain.replace(/^https?:\/\//,'').split('.');
-  // 3+ parts means subdomain already present (e.g. www.x.com or cs.mit.edu)
   if (parts.length >= 3) return 'https://' + parts.join('.');
-  // Bare domain like stanford.edu — add www.
   return 'https://www.' + parts.join('.');
 }
