@@ -2,7 +2,7 @@
 // UNIROUTE — app.js  (router + shared utilities)
 // ═══════════════════════════════════════════════
 
-const State = { view:'home', historyStack:[] };
+const State = { view:'home', historyStack:[], params:{} };
 
 // ── Rank badge color ───────────────────────────
 function rankColor(rank) {
@@ -27,21 +27,21 @@ function showToast(msg) {
 
 // ── Router ─────────────────────────────────────
 function navigateTo(viewId, params={}) {
-  State.historyStack.push({ view: State.view, params: State.params || {} });
+  // Push to browser history so back button works
+  history.pushState({ view: viewId, params }, '', null);
   State.params = params;
   _render(viewId, params);
   closeMobileSidebar();
 }
 
 function goBack() {
-  const prev = State.historyStack.pop();
-  if (!prev) { _render('home', {}); return; }
-  State.params = prev.params || {};
-  _render(prev.view, prev.params || {});
+  // Use browser back — popstate handler will call _render
+  history.back();
 }
 
 function _render(viewId, params={}) {
-  State.view = viewId;
+  State.view   = viewId;
+  State.params = params;
   document.getElementById('mainContent').scrollTop = 0;
 
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -67,6 +67,9 @@ function _render(viewId, params={}) {
   if (viewId !== 'home') {
     document.getElementById('view-home').classList.remove('active');
     dv.classList.add('active');
+  } else {
+    document.getElementById('view-home').classList.add('active');
+    dv.classList.remove('active');
   }
 
   updateBreadcrumb(viewId, params);
@@ -76,7 +79,6 @@ function _render(viewId, params={}) {
 function updateBreadcrumb(viewId, params={}) {
   const bc = document.getElementById('breadcrumb');
 
-  // Home: empty — UNIROUTE logo is the home indicator
   if (viewId === 'home') { bc.innerHTML = ''; return; }
 
   let html = '';
@@ -191,7 +193,6 @@ function showSplash() {
   const count  = document.getElementById('splashCount');
   const splash = document.getElementById('splash');
 
-  // Animate bar 0 → 100% over ~1.2s — no longer depends on data.js
   let p = 0;
   const iv = setInterval(() => {
     p = Math.min(p + Math.random() * 18, 95);
@@ -223,6 +224,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('uniroute-theme', next);
     document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+  });
+
+  // ── Browser back/forward button support ──────
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.view) {
+      _render(e.state.view, e.state.params || {});
+    } else {
+      _render('home', {});
+    }
   });
 
   showSplash();
@@ -266,6 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.chip[data-program]').forEach(chip =>
     chip.addEventListener('click', () => navigateTo('search', { q: chip.dataset.program })));
 
+  // Seed initial history state so back works from first page
+  history.replaceState({ view: 'home', params: {} }, '', null);
   navigateTo('home');
 });
 
