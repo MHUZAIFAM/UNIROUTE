@@ -5,6 +5,27 @@
 const FOCUS_MAP    = { CO:'Comprehensive', FO:'Focused', FC:'Fully Comprehensive', SP:'Specialist' };
 const RESEARCH_MAP = { VH:'Very High', HI:'High', MD:'Medium', LO:'Low' };
 const SIZE_MAP     = { S:'Small', M:'Medium', L:'Large', XL:'Extra Large' };
+const DEGREE_MAP   = {
+  'BSc':      'Bachelor of Science',
+  'BA':       'Bachelor of Arts',
+  'BSc/BA':   'Bachelor\'s (BSc / BA)',
+  'BEng':     'Bachelor of Engineering',
+  'BBA':      'Bachelor of Business Administration',
+  'MSc':      'Master of Science',
+  'MA':       'Master of Arts',
+  'MSc/MA':   'Master\'s (MSc / MA)',
+  'MEng':     'Master of Engineering',
+  'MBA':      'Master of Business Administration',
+  'MPhil':    'Master of Philosophy',
+  'LLM':      'Master of Laws',
+  'MArch':    'Master of Architecture',
+  'PhD':      'Doctor of Philosophy (PhD)',
+  'MD':       'Doctor of Medicine (MD)',
+  'JD':       'Juris Doctor (JD)',
+  'EdD':      'Doctor of Education',
+  'Diploma':  'Diploma',
+  'Certificate': 'Certificate',
+};
 
 // ── Theme helper ───────────────────────────────
 function _isLight() {
@@ -12,9 +33,6 @@ function _isLight() {
 }
 
 // ── Cover gradient ─────────────────────────────
-// Always gold (#f5a623) on the left.
-// Dark mode : fades to near-black on the right (overlay adds bottom vignette)
-// Light mode: fades to white on the right    (overlay is hidden via CSS)
 function _coverGradient() {
   return 'linear-gradient(135deg, #f5a623 0%, #c47d0e 60%, #8a5500 100%)';
 }
@@ -26,7 +44,6 @@ async function renderUniversity(params={}) {
     <div class="page-wrap uni-detail-wrap">
       ${backBtn('Back')}
       <div class="detail-cover" style="background:${_coverGradient()}">
-
         <div class="detail-cover-content">
           <div class="detail-identity">
             <span class="detail-alpha2">—</span>
@@ -61,11 +78,19 @@ let _currentUni = null;
 
 function _switchTab(tab) {
   if (!_currentUni) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const idx = ['overview','admissions','academics','nearby'].indexOf(tab);
+  if (idx >= 0) document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
+
   if (tab === 'nearby') {
-    document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===2));
     _loadNearby(_currentUni);
   } else {
-    _renderUniversityData(_currentUni, tab);
+    const content = document.getElementById('uniTabContent');
+    if (!content) return;
+    const rc = rankColor(_currentUni.rank);
+    if (tab === 'overview')   content.innerHTML = _overviewTab(_currentUni, rc);
+    if (tab === 'admissions') content.innerHTML = _admissionsTab(_currentUni, rc);
+    if (tab === 'academics')  content.innerHTML = _academicsTab(_currentUni, rc);
   }
 }
 
@@ -75,67 +100,83 @@ function _renderUniversityData(u, activeTab) {
   if (!dv) return;
 
   const alpha2  = (u.alpha2||'').toUpperCase() || '—';
-  const rc      = rankColor(u.rank);   // still used for badges, bars, pills
+  const rc      = rankColor(u.rank);
   const rankTxt = u.rank ? `#${u.rank}` : 'Unranked';
   const domain  = u.domain || null;
 
-  const scores = [
-    { label:'QS Overall',    val: u.overall  },
-    { label:'Academic Rep.', val: u.ar_score },
-    { label:'Employer Rep.', val: u.er_score },
-  ].filter(m => m.val && parseFloat(m.val) > 0);
+  // Quick stats for cover banner
+  const quickStats = [
+    u.founded        ? { label:'Founded',  val: u.founded }                           : null,
+    u.students       ? { label:'Students', val: Number(u.students).toLocaleString() } : null,
+    u.public_private ? { label:'Type',     val: u.public_private }                    : null,
+  ].filter(Boolean);
 
   dv.innerHTML = `
     <div class="page-wrap uni-detail-wrap">
       ${backBtn('Back')}
 
       <div class="detail-cover" style="background:${_coverGradient()}">
-
         <div class="detail-cover-content">
           <div class="detail-identity">
             <span class="detail-alpha2">${alpha2}</span>
             <div class="detail-identity-text">
               <span class="detail-rank-badge" style="border-color:${rc};color:${rc}">${rankTxt}</span>
               <h2 class="detail-uni-name">${escHtml(u.name)}</h2>
-              <p class="detail-location">${u.state ? escHtml(u.state)+', ' : ''}${escHtml(u.country)}</p>
+              <p class="detail-location">${u.city ? escHtml(u.city)+', ' : u.state ? escHtml(u.state)+', ' : ''}${escHtml(u.country)}</p>
               ${domain ? `<a class="detail-web" href="${fixDomain(domain)}" target="_blank" rel="noopener">${domain}</a>` : ''}
             </div>
           </div>
+          ${quickStats.length > 0 ? `
+          <div class="cover-quick-stats">
+            ${quickStats.map(s => `
+              <div class="cqs-item">
+                <span class="cqs-val">${escHtml(String(s.val))}</span>
+                <span class="cqs-label">${s.label}</span>
+              </div>`).join('<div class="cqs-divider"></div>')}
+          </div>` : ''}
         </div>
       </div>
 
       <div class="detail-tabs">
-        <button class="tab-btn ${activeTab==='overview'?'active':''}"
-          onclick="_switchTab('overview')">Overview</button>
-        <button class="tab-btn ${activeTab==='metrics'?'active':''}"
-          onclick="_switchTab('metrics')">QS Metrics</button>
-        <button class="tab-btn ${activeTab==='nearby'?'active':''}"
-          onclick="_switchTab('nearby')">
-          More in ${escHtml(u.country)}
-        </button>
+        <button class="tab-btn ${activeTab==='overview'  ?'active':''}" onclick="_switchTab('overview')">Overview</button>
+        <button class="tab-btn ${activeTab==='admissions'?'active':''}" onclick="_switchTab('admissions')">Admissions</button>
+        <button class="tab-btn ${activeTab==='academics' ?'active':''}" onclick="_switchTab('academics')">Academics</button>
+        <button class="tab-btn ${activeTab==='nearby'    ?'active':''}" onclick="_switchTab('nearby')">More in ${escHtml(u.country)}</button>
       </div>
 
       <div class="tab-content" id="uniTabContent">
-        ${activeTab === 'overview' ? _overviewTab(u, scores, rc) : ''}
-        ${activeTab === 'metrics'  ? _metricsTab(u, scores, rc) : ''}
+        ${activeTab === 'overview'   ? _overviewTab(u, rc)   : ''}
+        ${activeTab === 'admissions' ? _admissionsTab(u, rc) : ''}
+        ${activeTab === 'academics'  ? _academicsTab(u, rc)  : ''}
       </div>
     </div>`;
 }
 
-function _overviewTab(u, scores, rc) {
+// ── Tab 1: Overview ────────────────────────────
+function _overviewTab(u, rc) {
+  const scores = [
+    { label:'QS Overall',    val: u.overall  },
+    { label:'Academic Rep.', val: u.ar_score },
+    { label:'Employer Rep.', val: u.er_score },
+  ].filter(m => m.val && parseFloat(m.val) > 0);
+
   return `
     <div class="overview-grid">
       <div class="overview-main">
         <h3 class="panel-title">Institutional Profile</h3>
         <div class="profile-grid">
           <div class="profile-item"><span class="pi-label">Country</span><span class="pi-val">${escHtml(u.country)}</span></div>
-          ${u.state  ? `<div class="profile-item"><span class="pi-label">State / Province</span><span class="pi-val">${escHtml(u.state)}</span></div>` : ''}
-          ${u.status ? `<div class="profile-item"><span class="pi-label">Status</span><span class="pi-val">${escHtml(u.status)}</span></div>` : ''}
-          ${u.size   ? `<div class="profile-item"><span class="pi-label">Size</span><span class="pi-val">${SIZE_MAP[u.size]||u.size}</span></div>` : ''}
-          ${u.focus  ? `<div class="profile-item"><span class="pi-label">Academic Focus</span><span class="pi-val">${FOCUS_MAP[u.focus]||u.focus}</span></div>` : ''}
-          ${u.research?`<div class="profile-item"><span class="pi-label">Research Intensity</span><span class="pi-val">${RESEARCH_MAP[u.research]||u.research}</span></div>` : ''}
-          ${u.region ? `<div class="profile-item"><span class="pi-label">Region</span><span class="pi-val">${escHtml(u.region)}</span></div>` : ''}
-          ${u.domain ? `<div class="profile-item"><span class="pi-label">Website</span><span class="pi-val"><a href="${fixDomain(u.domain)}" target="_blank">${u.domain}</a></span></div>` : ''}
+          ${u.city         ? `<div class="profile-item"><span class="pi-label">City</span><span class="pi-val">${escHtml(u.city)}</span></div>` : ''}
+          ${u.founded      ? `<div class="profile-item"><span class="pi-label">Founded</span><span class="pi-val">${escHtml(u.founded)}</span></div>` : ''}
+          ${u.public_private ? `<div class="profile-item"><span class="pi-label">Type</span><span class="pi-val">${escHtml(u.public_private)}</span></div>` : u.status ? `<div class="profile-item"><span class="pi-label">Status</span><span class="pi-val">${escHtml(u.status)}</span></div>` : ''}
+          ${u.students     ? `<div class="profile-item"><span class="pi-label">Students</span><span class="pi-val">${Number(u.students).toLocaleString()}</span></div>` : ''}
+          ${u.int_students_pct ? `<div class="profile-item"><span class="pi-label">Intl. Students</span><span class="pi-val">${escHtml(u.int_students_pct)}</span></div>` : ''}
+          ${u.size         ? `<div class="profile-item"><span class="pi-label">Size</span><span class="pi-val">${SIZE_MAP[u.size]||u.size}</span></div>` : ''}
+          ${u.focus        ? `<div class="profile-item"><span class="pi-label">Academic Focus</span><span class="pi-val">${FOCUS_MAP[u.focus]||u.focus}</span></div>` : ''}
+          ${u.research     ? `<div class="profile-item"><span class="pi-label">Research</span><span class="pi-val">${RESEARCH_MAP[u.research]||u.research}</span></div>` : ''}
+          ${u.region       ? `<div class="profile-item"><span class="pi-label">Region</span><span class="pi-val">${escHtml(u.region)}</span></div>` : ''}
+          ${u.teaching_language ? `<div class="profile-item"><span class="pi-label">Language</span><span class="pi-val">${escHtml(u.teaching_language)}</span></div>` : ''}
+          ${u.domain       ? `<div class="profile-item"><span class="pi-label">Website</span><span class="pi-val"><a href="${fixDomain(u.domain)}" target="_blank">${u.domain}</a></span></div>` : ''}
         </div>
 
         ${u.overall ? `
@@ -156,8 +197,8 @@ function _overviewTab(u, scores, rc) {
         ${u.domain ? `<a class="website-btn" href="${fixDomain(u.domain)}" target="_blank" rel="noopener" style="margin-top:24px;display:inline-flex">Visit Official Website</a>` : ''}
       </div>
 
-      ${scores.length > 0 ? `
       <div class="overview-side">
+        ${scores.length > 0 ? `
         <div class="side-card">
           <h4>QS Scores</h4>
           <div class="qs-scores-list">
@@ -168,40 +209,155 @@ function _overviewTab(u, scores, rc) {
                 <span class="qsr-val" style="color:${rc}">${m.val}</span>
               </div>`).join('')}
           </div>
-        </div>
-      </div>` : ''}
+        </div>` : ''}
+
+        ${(u.tuition_ug_intl || u.acceptance_rate) ? `
+        <div class="side-card" style="margin-top:14px">
+          <h4>Quick Facts</h4>
+          <div class="facts-list">
+            ${u.acceptance_rate  ? `<li><span>Acceptance Rate</span><strong>${escHtml(u.acceptance_rate)}</strong></li>`   : ''}
+            ${u.tuition_ug_intl  ? `<li><span>UG Tuition (Intl.)</span><strong>${escHtml(u.tuition_ug_intl)}</strong></li>` : ''}
+            ${u.tuition_pg_intl  ? `<li><span>PG Tuition (Intl.)</span><strong>${escHtml(u.tuition_pg_intl)}</strong></li>` : ''}
+            ${u.intakes          ? `<li><span>Intakes</span><strong>${escHtml(u.intakes)}</strong></li>`                    : ''}
+          </div>
+        </div>` : ''}
+
+        ${(u.scholarships === 'Yes' || u.phd_funded === 'Yes') ? `
+        <div class="side-card" style="margin-top:14px">
+          <h4>Financial Aid</h4>
+          <div class="aid-list">
+            ${u.scholarships === 'Yes' ? `<div class="aid-item aid-yes">Scholarships available</div>` : ''}
+            ${u.phd_funded   === 'Yes' ? `<div class="aid-item aid-yes">PhD fully funded</div>`       : ''}
+          </div>
+        </div>` : ''}
+      </div>
     </div>`;
 }
 
-function _metricsTab(u, scores, rc) {
-  if (scores.length === 0) return `
+// ── Tab 2: Admissions ──────────────────────────
+function _admissionsTab(u, rc) {
+  const hasAdmissions = u.acceptance_rate || u.tuition_ug_intl || u.tuition_pg_intl ||
+                        u.ielts_min || u.toefl_min || u.gpa_min ||
+                        u.deadline_ug || u.deadline_pg || u.intakes || u.living_cost;
+
+  if (!hasAdmissions) return `
     <div class="empty-state" style="padding:50px 0">
-      <p>No QS metrics available for this university.</p>
-      <button class="ghost-btn" onclick="navigateTo('rank')" style="margin-top:12px">Browse QS Rankings</button>
+      <p>Admissions data not available for this university.</p>
+      ${u.domain ? `<a class="website-btn" href="${fixDomain(u.domain)}" target="_blank" rel="noopener" style="margin-top:16px;display:inline-flex">Check Official Website</a>` : ''}
     </div>`;
 
   return `
-    <div class="metrics-page">
-      <div class="metrics-full-grid">
-        ${scores.map(m=>`
-          <div class="metric-card-full">
-            <div class="mcf-header">
-              <span class="mcf-label">${m.label}</span>
-              <span class="mcf-val" style="color:${rc}">${m.val}</span>
-            </div>
-            <div class="mcf-bar-wrap"><div class="mcf-bar" style="width:${Math.min(parseFloat(m.val),100)}%;background:linear-gradient(90deg,${rc},${rc}88)"></div></div>
-            <span class="mcf-sub">${m.val} out of 100</span>
-          </div>`).join('')}
-      </div>
-      ${(u.size||u.focus||u.research||u.status) ? `
-      <h3 class="panel-title" style="margin-top:32px">Institutional Indicators</h3>
-      <div class="indicators-grid">
-        ${u.status   ?`<div class="indicator-item"><span class="ind-label">Status</span><span class="ind-val">${escHtml(u.status)}</span></div>`:''}
-        ${u.size     ?`<div class="indicator-item"><span class="ind-label">Size</span><span class="ind-val">${SIZE_MAP[u.size]||u.size}</span></div>`:''}
-        ${u.focus    ?`<div class="indicator-item"><span class="ind-label">Academic Focus</span><span class="ind-val">${FOCUS_MAP[u.focus]||u.focus}</span></div>`:''}
-        ${u.research ?`<div class="indicator-item"><span class="ind-label">Research Intensity</span><span class="ind-val">${RESEARCH_MAP[u.research]||u.research}</span></div>`:''}
-        ${u.region   ?`<div class="indicator-item"><span class="ind-label">QS Region</span><span class="ind-val">${escHtml(u.region)}</span></div>`:''}
+    <div class="admissions-wrap">
+
+      ${(u.acceptance_rate || u.tuition_ug_intl || u.tuition_pg_intl || u.living_cost) ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Key Facts</h3>
+        <div class="adm-stats-grid">
+          ${u.acceptance_rate ? `<div class="adm-stat-card"><span class="asc-icon">🎯</span><span class="asc-val">${escHtml(u.acceptance_rate)}</span><span class="asc-label">Acceptance Rate</span></div>` : ''}
+          ${u.tuition_ug_intl ? `<div class="adm-stat-card"><span class="asc-icon">💰</span><span class="asc-val">${escHtml(u.tuition_ug_intl)}</span><span class="asc-label">UG Tuition / Year</span></div>` : ''}
+          ${u.tuition_pg_intl ? `<div class="adm-stat-card"><span class="asc-icon">💰</span><span class="asc-val">${escHtml(u.tuition_pg_intl)}</span><span class="asc-label">PG Tuition / Year</span></div>` : ''}
+          ${u.living_cost     ? `<div class="adm-stat-card"><span class="asc-icon">🏠</span><span class="asc-val">${escHtml(u.living_cost)}</span><span class="asc-label">Living Cost / Year</span></div>` : ''}
+        </div>
       </div>` : ''}
+
+      ${u.intakes ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Intake Seasons</h3>
+        <div class="intake-chips">
+          ${u.intakes.split(',').map(i => `<span class="intake-chip">${escHtml(i.trim())}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${(u.deadline_ug || u.deadline_pg) ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Application Deadlines</h3>
+        <div class="deadline-grid">
+          ${u.deadline_ug ? `<div class="deadline-card"><span class="dl-type">Undergraduate</span><span class="dl-date">${escHtml(u.deadline_ug)}</span></div>` : ''}
+          ${u.deadline_pg ? `<div class="deadline-card"><span class="dl-type">Postgraduate</span><span class="dl-date">${escHtml(u.deadline_pg)}</span></div>` : ''}
+        </div>
+      </div>` : ''}
+
+      ${(u.ielts_min || u.toefl_min || u.gpa_min) ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Entry Requirements</h3>
+        <div class="req-grid">
+          ${u.ielts_min ? `<div class="req-card"><span class="req-name">IELTS</span><span class="req-val" style="color:${rc}">${escHtml(u.ielts_min)}</span><span class="req-sub">Minimum score</span></div>` : ''}
+          ${u.toefl_min ? `<div class="req-card"><span class="req-name">TOEFL iBT</span><span class="req-val" style="color:${rc}">${escHtml(u.toefl_min)}</span><span class="req-sub">Minimum score</span></div>` : ''}
+          ${u.gpa_min   ? `<div class="req-card"><span class="req-name">GPA</span><span class="req-val" style="color:${rc}">${escHtml(u.gpa_min)}</span><span class="req-sub">Minimum GPA</span></div>` : ''}
+        </div>
+      </div>` : ''}
+
+      ${(u.scholarships === 'Yes' || u.phd_funded === 'Yes') ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Financial Aid</h3>
+        <div class="aid-grid">
+          ${u.scholarships === 'Yes' ? `<div class="aid-card aid-yes"><span class="aid-icon">✓</span><div><strong>Scholarships Available</strong><p>International students may apply for scholarships</p></div></div>` : ''}
+          ${u.phd_funded   === 'Yes' ? `<div class="aid-card aid-yes"><span class="aid-icon">✓</span><div><strong>PhD Fully Funded</strong><p>PhD programs are typically fully funded</p></div></div>` : ''}
+        </div>
+      </div>` : ''}
+
+      <p class="adm-disclaimer">Data is approximate. Always verify with the official university website before applying.</p>
+    </div>`;
+}
+
+// ── Tab 3: Academics ───────────────────────────
+function _academicsTab(u, rc) {
+  const scores = [
+    { label:'QS Overall',    val: u.overall  },
+    { label:'Academic Rep.', val: u.ar_score },
+    { label:'Employer Rep.', val: u.er_score },
+  ].filter(m => m.val && parseFloat(m.val) > 0);
+
+  return `
+    <div class="academics-wrap">
+
+      ${u.degrees ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Degrees Offered</h3>
+        <div class="degree-chips">
+          ${u.degrees.split(',').map(d => `<span class="degree-chip">${escHtml(d.trim())}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${u.programs ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Programs & Fields</h3>
+        <div class="programs-chips">
+          ${u.programs.split(',').map(p => `
+            <span class="program-chip" onclick="navigateTo('search',{q:${JSON.stringify(p.trim())}})">
+              ${escHtml(p.trim())}
+            </span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${scores.length > 0 ? `
+      <div class="adm-section">
+        <h3 class="panel-title">QS Scores</h3>
+        <div class="metrics-full-grid">
+          ${scores.map(m=>`
+            <div class="metric-card-full">
+              <div class="mcf-header">
+                <span class="mcf-label">${m.label}</span>
+                <span class="mcf-val" style="color:${rc}">${m.val}</span>
+              </div>
+              <div class="mcf-bar-wrap"><div class="mcf-bar" style="width:${Math.min(parseFloat(m.val),100)}%;background:linear-gradient(90deg,${rc},${rc}88)"></div></div>
+              <span class="mcf-sub">${m.val} out of 100</span>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${(u.size || u.focus || u.research || u.status) ? `
+      <div class="adm-section">
+        <h3 class="panel-title">Institutional Indicators</h3>
+        <div class="indicators-grid">
+          ${u.status   ? `<div class="indicator-item"><span class="ind-label">Status</span><span class="ind-val">${escHtml(u.status)}</span></div>` : ''}
+          ${u.size     ? `<div class="indicator-item"><span class="ind-label">Size</span><span class="ind-val">${SIZE_MAP[u.size]||u.size}</span></div>` : ''}
+          ${u.focus    ? `<div class="indicator-item"><span class="ind-label">Academic Focus</span><span class="ind-val">${FOCUS_MAP[u.focus]||u.focus}</span></div>` : ''}
+          ${u.research ? `<div class="indicator-item"><span class="ind-label">Research Intensity</span><span class="ind-val">${RESEARCH_MAP[u.research]||u.research}</span></div>` : ''}
+          ${u.region   ? `<div class="indicator-item"><span class="ind-label">QS Region</span><span class="ind-val">${escHtml(u.region)}</span></div>` : ''}
+        </div>
+      </div>` : ''}
+
     </div>`;
 }
 
@@ -209,12 +365,11 @@ async function _loadNearby(u) {
   const tabContent = document.getElementById('uniTabContent');
   if (!tabContent) return;
 
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===2));
   tabContent.innerHTML = `<div class="api-loading"><div class="loading-spinner"></div><p>Loading universities in ${escHtml(u.country)}…</p></div>`;
 
   try {
-    const data = await apiGetCountryUniversities(u.country, { sort:'rank', limit:6 });
-    const nearby = data.universities.filter(x => x.id !== u.id);
+    const data = await apiGetCountryUniversities(u.country, { sort:'rank', limit:7 });
+    const nearby = data.universities.filter(x => x.id !== u.id).slice(0, 6);
 
     tabContent.innerHTML = `
       <div class="nearby-page">
