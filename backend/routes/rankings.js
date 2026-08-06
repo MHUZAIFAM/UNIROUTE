@@ -1,13 +1,14 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
+const { parsePage, parsePageSize } = require('../utils/pagination');
 
 // GET /api/rankings?page=0&country=&region=&q=
 router.get('/', async (req, res) => {
   try {
     const { country='', region='', q='' } = req.query;
-    const page     = parseInt(req.query.page)  || 0;
-    const pageSize = parseInt(req.query.limit) || 50;
+    const page     = parsePage(req.query.page);
+    const pageSize = parsePageSize(req.query.limit, 50);
     const offset   = page * pageSize;
 
     const conditions = [`rank IS NOT NULL AND rank != ''`];
@@ -50,7 +51,8 @@ router.get('/', async (req, res) => {
       pages: Math.ceil(total / pageSize),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/rankings failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
+const { parsePage, parsePageSize } = require('../utils/pagination');
 
 // GET /api/countries — all countries with university counts
 router.get('/', async (req, res) => {
@@ -18,14 +19,17 @@ router.get('/', async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/countries failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/countries/:country/universities — unis in a country
 router.get('/:country/universities', async (req, res) => {
   try {
-    const { sort='rank', page=0, limit=24, q='' } = req.query;
+    const { sort='rank', q='' } = req.query;
+    const page   = parsePage(req.query.page);
+    const limit  = parsePageSize(req.query.limit, 24);
     const offset = page * limit;
     const country = req.params.country;
 
@@ -57,11 +61,12 @@ router.get('/:country/universities', async (req, res) => {
     res.json({
       universities: result.rows,
       total,
-      page: parseInt(page),
+      page,
       pages: Math.ceil(total / limit),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/countries/:country/universities failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

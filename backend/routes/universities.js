@@ -1,12 +1,13 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
+const { parsePage, parsePageSize } = require('../utils/pagination');
 
 // GET /api/universities — paginated list
 router.get('/', async (req, res) => {
   try {
-    const page     = parseInt(req.query.page)  || 0;
-    const pageSize = parseInt(req.query.limit) || 24;
+    const page     = parsePage(req.query.page);
+    const pageSize = parsePageSize(req.query.limit, 24);
     const offset   = page * pageSize;
 
     const result = await db.query(
@@ -25,7 +26,8 @@ router.get('/', async (req, res) => {
       pages:  Math.ceil(total.rows[0].count / pageSize),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/universities failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -40,7 +42,8 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'University not found' });
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/universities/:id failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -1,13 +1,14 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
+const { parsePage, parsePageSize } = require('../utils/pagination');
 
 // GET /api/search?q=mit&country=Pakistan&region=Asia&rankMax=100&sort=rank&page=0
 router.get('/', async (req, res) => {
   try {
     const { q='', country='', region='', rankMax='', sort='rank', ranked='' } = req.query;
-    const page     = parseInt(req.query.page)  || 0;
-    const pageSize = parseInt(req.query.limit) || 24;
+    const page     = parsePage(req.query.page);
+    const pageSize = parsePageSize(req.query.limit, 24);
     const offset   = page * pageSize;
 
     // Build WHERE clauses dynamically
@@ -30,9 +31,10 @@ router.get('/', async (req, res) => {
       values.push(region);
       idx++;
     }
-    if (rankMax) {
+    const rankMaxNum = parseInt(rankMax);
+    if (rankMax && Number.isFinite(rankMaxNum)) {
       conditions.push(`rank_num <= $${idx}`);
-      values.push(parseInt(rankMax));
+      values.push(rankMaxNum);
       idx++;
     }
     if (ranked === 'true') {
@@ -71,7 +73,8 @@ router.get('/', async (req, res) => {
       pages: Math.ceil(total / pageSize),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/search failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
