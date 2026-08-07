@@ -253,10 +253,10 @@ function _admissionsTab(u, rc) {
       <div class="adm-section">
         <h3 class="panel-title">Key Facts</h3>
         <div class="adm-stats-grid">
-          ${u.acceptance_rate ? `<div class="adm-stat-card"><span class="asc-icon">🎯</span><span class="asc-val">${escHtml(u.acceptance_rate)}</span><span class="asc-label">Acceptance Rate</span></div>` : ''}
-          ${u.tuition_ug_intl ? `<div class="adm-stat-card"><span class="asc-icon">💰</span><span class="asc-val">${escHtml(u.tuition_ug_intl)}</span><span class="asc-label">UG Tuition / Year</span></div>` : ''}
-          ${u.tuition_pg_intl ? `<div class="adm-stat-card"><span class="asc-icon">💰</span><span class="asc-val">${escHtml(u.tuition_pg_intl)}</span><span class="asc-label">PG Tuition / Year</span></div>` : ''}
-          ${u.living_cost     ? `<div class="adm-stat-card"><span class="asc-icon">🏠</span><span class="asc-val">${escHtml(u.living_cost)}</span><span class="asc-label">Living Cost / Year</span></div>` : ''}
+          ${u.acceptance_rate ? `<div class="adm-stat-card"><span class="asc-icon">${ICONS.target}</span><span class="asc-val">${escHtml(u.acceptance_rate)}</span><span class="asc-label">Acceptance Rate</span></div>` : ''}
+          ${u.tuition_ug_intl ? `<div class="adm-stat-card"><span class="asc-icon">${ICONS.dollar}</span><span class="asc-val">${escHtml(u.tuition_ug_intl)}</span><span class="asc-label">UG Tuition / Year</span></div>` : ''}
+          ${u.tuition_pg_intl ? `<div class="adm-stat-card"><span class="asc-icon">${ICONS.dollar}</span><span class="asc-val">${escHtml(u.tuition_pg_intl)}</span><span class="asc-label">PG Tuition / Year</span></div>` : ''}
+          ${u.living_cost     ? `<div class="adm-stat-card"><span class="asc-icon">${ICONS.home}</span><span class="asc-val">${escHtml(u.living_cost)}</span><span class="asc-label">Living Cost / Year</span></div>` : ''}
         </div>
       </div>` : ''}
 
@@ -291,8 +291,8 @@ function _admissionsTab(u, rc) {
       <div class="adm-section">
         <h3 class="panel-title">Financial Aid</h3>
         <div class="aid-grid">
-          ${u.scholarships === 'Yes' ? `<div class="aid-card aid-yes"><span class="aid-icon">✓</span><div><strong>Scholarships Available</strong><p>International students may apply for scholarships</p></div></div>` : ''}
-          ${u.phd_funded   === 'Yes' ? `<div class="aid-card aid-yes"><span class="aid-icon">✓</span><div><strong>PhD Fully Funded</strong><p>PhD programs are typically fully funded</p></div></div>` : ''}
+          ${u.scholarships === 'Yes' ? `<div class="aid-card aid-yes"><span class="aid-icon">${ICONS.check}</span><div><strong>Scholarships Available</strong><p>International students may apply for scholarships</p></div></div>` : ''}
+          ${u.phd_funded   === 'Yes' ? `<div class="aid-card aid-yes"><span class="aid-icon">${ICONS.check}</span><div><strong>PhD Fully Funded</strong><p>PhD programs are typically fully funded</p></div></div>` : ''}
         </div>
       </div>` : ''}
 

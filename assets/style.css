@@ -229,11 +229,12 @@ button{font-family:var(--font-b)}
 .sidebar-toggle{
  height:52px;background:transparent;border:none;
  border-bottom:1px solid var(--border);color:var(--text);
- font-size:1.2rem;cursor:pointer;
+ cursor:pointer;
  display:flex;align-items:center;justify-content:center;
  flex-shrink:0;transition:background .2s;
 }
 .sidebar-toggle:hover{background:rgba(255,255,255,0.06)}
+.sidebar-toggle svg{width:20px;height:20px}
 
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 10px 20px}
 .sidebar-nav{display:flex;flex-direction:column;gap:8px}
@@ -252,13 +253,15 @@ button{font-family:var(--font-b)}
 }
 .nav-btn:hover{background:var(--btn-hover);transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,.2)}
 .nav-btn.active{background:var(--btn-active);box-shadow:0 0 18px rgba(245,166,35,.3)}
-.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.nav-icon{width:20px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.nav-icon svg{width:18px;height:18px;display:block}
 .nav-label{transition:opacity .3s var(--ease),width .3s var(--ease)}
 
 .sidebar.collapsed .sidebar-scroll{padding:14px 6px 20px}
 .sidebar.collapsed .nav-label{opacity:0;width:0;overflow:hidden;pointer-events:none}
 .sidebar.collapsed .nav-btn{justify-content:center;padding:11px 0;gap:0;border-radius:12px}
-.sidebar.collapsed .nav-icon{font-size:1.15rem;width:auto}
+.sidebar.collapsed .nav-icon{width:auto}
+.sidebar.collapsed .nav-icon svg{width:20px;height:20px}
 
 /*
  MAIN
@@ -643,10 +646,11 @@ button{font-family:var(--font-b)}
  */
 .mobile-menu-btn {
  display:none;background:transparent;border:none;color:var(--text);
- font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:6px;
+ cursor:pointer;padding:4px 8px;border-radius:6px;
  transition:background .2s;flex-shrink:0;
 }
 .mobile-menu-btn:hover { background:rgba(255,255,255,.08); }
+.mobile-menu-btn svg { width:22px;height:22px;display:block }
 
 /* Mobile sidebar overlay */
 .sidebar-overlay {
@@ -1332,11 +1336,11 @@ button{font-family:var(--font-b)}
   width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  font-size: 1rem;
   flex-shrink: 0;
   transition: background .2s, transform .2s, box-shadow .2s;
   margin-left: auto;
 }
+.theme-toggle svg { width: 18px; height: 18px; display: block; }
 .theme-toggle:hover {
   background: var(--btn-hover);
   transform: rotate(20deg);
@@ -1618,7 +1622,8 @@ button{font-family:var(--font-b)}
   border-radius: var(--radius);
   text-align: center;
 }
-.asc-icon { font-size: 1.4rem; }
+.asc-icon { color: var(--accent); }
+.asc-icon svg { width: 22px; height: 22px; display: block; }
 .asc-val {
   font-family: var(--font-d);
   font-size: 1.2rem;
@@ -1732,12 +1737,11 @@ button{font-family:var(--font-b)}
   border-color: rgba(74,222,128,0.2);
 }
 .aid-icon {
-  font-size: 1rem;
-  font-weight: 700;
   color: var(--green);
   flex-shrink: 0;
   margin-top: 2px;
 }
+.aid-icon svg { width: 16px; height: 16px; display: block; }
 .aid-card strong {
   font-size: .88rem;
   color: #fff;

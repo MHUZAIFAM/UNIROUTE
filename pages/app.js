@@ -217,13 +217,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('uniroute-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
   const themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) themeBtn.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+  if (themeBtn) themeBtn.innerHTML = savedTheme === 'dark' ? ICONS.moon : ICONS.sun;
   document.getElementById('themeToggle')?.addEventListener('click', () => {
     const cur  = document.documentElement.getAttribute('data-theme');
     const next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('uniroute-theme', next);
-    document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+    document.getElementById('themeToggle').innerHTML = next === 'dark' ? ICONS.moon : ICONS.sun;
   });
 
   // ── Browser back/forward button support ──────
