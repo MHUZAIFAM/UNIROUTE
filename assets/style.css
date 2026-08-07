@@ -20,7 +20,7 @@
  --green: #4ade80;
  --red: #f87171;
  --text: #f0f0f0;
- --text-muted: rgba(240,240,240,0.45);
+ --text-muted: rgba(240,240,240,0.55);
  --text-dim: rgba(240,240,240,0.22);
  --sidebar-w: 210px;
  --sidebar-col: 56px;
@@ -204,6 +204,23 @@ body{display:flex;background:var(--main-bg);color:var(--text);font-family:var(--
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 button{font-family:var(--font-b)}
+
+/* ── Accessible focus states (keyboard nav only) ── */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ── Respect OS-level reduced motion ───────────── */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:0.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
 
 /*
  SCROLLBARS (white)
@@ -677,6 +694,7 @@ select.filter-select.cs-native{display:none}
 .mobile-menu-btn {
  display:none;background:transparent;border:none;color:var(--text);
  cursor:pointer;padding:4px 8px;border-radius:6px;
+ min-width:44px;min-height:44px;align-items:center;justify-content:center;
  transition:background .2s;flex-shrink:0;
 }
 .mobile-menu-btn:hover { background:rgba(255,255,255,.08); }
@@ -1363,7 +1381,7 @@ select.filter-select.cs-native{display:none}
   background: var(--btn-bg);
   border: 1px solid var(--border);
   border-radius: 50%;
-  width: 36px; height: 36px;
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
