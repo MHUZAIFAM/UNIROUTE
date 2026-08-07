@@ -427,9 +427,36 @@ button{font-family:var(--font-b)}
 .filter-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding:14px;margin:0 28px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius)}
 .filter-group{display:flex;flex-direction:column;gap:5px}
 .filter-group label{font-size:.68rem;color:var(--text-muted);letter-spacing:.08em;font-weight:700}
-.filter-select{padding:7px 10px;border-radius:var(--radius-sm);background:rgba(255,255,255,.07);border:1px solid var(--border);color:#fff;font-family:var(--font-b);font-size:.8rem;outline:none;cursor:pointer;min-width:130px;transition:border-color .2s}
-.filter-select:focus{border-color:rgba(255,255,255,.3)}
-.filter-select option{background:#1c1c1c}
+.filter-select.cs-native{display:none}
+
+/* ── Custom select (styled replacement for the native <select> popup) ── */
+.cs-select{position:relative;display:inline-block;min-width:130px}
+.cs-trigger{
+  width:100%;padding:7px 10px;border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  color:#fff;font-family:var(--font-b);font-size:.8rem;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  cursor:pointer;outline:none;transition:border-color .2s,background .2s;
+}
+.cs-trigger:hover{background:rgba(255,255,255,.1)}
+.cs-select.cs-open .cs-trigger{border-color:rgba(255,255,255,.3)}
+.cs-trigger-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-chevron{display:flex;flex-shrink:0;color:var(--text-dim);transition:transform .2s var(--ease)}
+.cs-chevron svg{width:13px;height:13px;display:block}
+.cs-select.cs-open .cs-chevron{transform:rotate(180deg)}
+.cs-list{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:max-content;
+  background:var(--card-bg);border:1px solid var(--border-light);border-radius:var(--radius-sm);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;z-index:40;
+  max-height:240px;overflow-y:auto;
+  opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;
+  transition:opacity .15s var(--ease),transform .15s var(--ease);
+}
+.cs-select.cs-open .cs-list{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+.cs-option{padding:7px 10px;border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .15s}
+.cs-option:hover{background:var(--surface-hover)}
+.cs-option.selected{background:var(--accent-dim);color:var(--accent);font-weight:700}
+
 .ranked-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.8rem;color:var(--text-muted);align-self:flex-end;padding-bottom:7px}
 .ranked-toggle input{accent-color:var(--btn-active);width:15px;height:15px;cursor:pointer}
 .filter-reset-btn{padding:7px 14px;border-radius:var(--radius-sm);background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.3);color:#ff8a80;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .2s;align-self:flex-end}
@@ -824,7 +851,7 @@ button{font-family:var(--font-b)}
 
  /* Filter bar on search — stack vertically */
  .filter-bar { flex-direction:column;align-items:stretch; }
- .filter-select { min-width:unset;width:100%; }
+ .cs-select { min-width:unset;width:100%; }
  .filter-group { width:100%; }
  .filter-reset-btn { width:100%;text-align:center; }
  .ranked-toggle { padding-bottom:0; }
@@ -1378,11 +1405,19 @@ button{font-family:var(--font-b)}
   border: 1.5px solid rgba(124,111,205,0.3) !important;
 }
 [data-theme="light"] .toolbar-search::placeholder { color: rgba(26,26,46,0.35) !important; }
-[data-theme="light"] .filter-select {
+[data-theme="light"] .cs-trigger {
   background: #ffffff !important;
   color: #1a1a2e !important;
   border: 1.5px solid rgba(124,111,205,0.3) !important;
 }
+[data-theme="light"] .cs-list {
+  background: #ffffff;
+  border-color: rgba(124,111,205,0.25);
+  box-shadow: 0 8px 24px rgba(124,111,205,0.18);
+}
+[data-theme="light"] .cs-option { color: #1a1a2e; }
+[data-theme="light"] .cs-option:hover { background: rgba(245,166,35,0.12); }
+[data-theme="light"] .cs-option.selected { background: rgba(245,166,35,0.15); color: var(--accent); }
 
 /* Programs page */
 [data-theme="light"] .prog-badge {
