@@ -27,23 +27,13 @@ const DEGREE_MAP   = {
   'Certificate': 'Certificate',
 };
 
-// ── Theme helper ───────────────────────────────
-function _isLight() {
-  return document.documentElement.getAttribute('data-theme') === 'light';
-}
-
-// ── Cover gradient ─────────────────────────────
-function _coverGradient() {
-  return 'linear-gradient(135deg, #f5a623 0%, #c47d0e 60%, #8a5500 100%)';
-}
-
 async function renderUniversity(params={}) {
   const dv = document.getElementById('dynamicView');
 
   dv.innerHTML = `
     <div class="page-wrap uni-detail-wrap">
       ${backBtn('Back')}
-      <div class="detail-cover" style="background:${_coverGradient()}">
+      <div class="detail-cover">
         <div class="detail-cover-content">
           <div class="detail-identity">
             <span class="detail-alpha2">—</span>
@@ -115,7 +105,7 @@ function _renderUniversityData(u, activeTab) {
     <div class="page-wrap uni-detail-wrap">
       ${backBtn('Back')}
 
-      <div class="detail-cover" style="background:${_coverGradient()}">
+      <div class="detail-cover">
         <div class="detail-cover-content">
           <div class="detail-identity">
             <span class="detail-alpha2">${alpha2}</span>

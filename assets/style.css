@@ -91,9 +91,10 @@
 [data-theme="light"] .rank-name-cell { color:var(--text); }
 [data-theme="light"] .rank-country { color:var(--text-muted); }
 
-/* Light detail cover */
+/* Light detail cover — dark text, since the cover fades gold→white */
 [data-theme="light"] .detail-uni-name { color:#1a1a2e; }
 [data-theme="light"] .detail-location { color:rgba(26,26,46,0.6); }
+[data-theme="light"] .detail-web      { color:rgba(26,26,46,0.75); }
 
 /* Light profile grid */
 [data-theme="light"] .profile-item { border-color:var(--border); }
@@ -188,7 +189,13 @@
 
 /* Light detail cover alpha2 */
 [data-theme="light"] .detail-alpha2 { color:rgba(26,26,46,0.2); }
-[data-theme="light"] .detail-rank-badge { background:rgba(255,255,255,0.8); }
+/* Solid white pill + dark ink. The rank colour stays on the border (set inline)
+   so the tier is still encoded, but it can't be used for the text: on the gold
+   cover a top-10 badge is amber-on-amber (1:1) and unreadable. */
+[data-theme="light"] .detail-rank-badge {
+  background: rgba(255,255,255,0.92);
+  color: #1a1a2e !important;
+}
 
 /* Light unranked notice */
 [data-theme="light"] .unranked-notice { background:rgba(124,111,205,0.06); border-color:rgba(124,111,205,0.15); }
@@ -501,7 +508,7 @@ select.filter-select.cs-native{display:none}
 .detail-web{font-size:.78rem;color:rgba(255,255,255,0.85);margin-top:3px;display:inline-block}
 .detail-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:0 28px 20px;padding-bottom:0}
 .tab-btn{padding:9px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:color .2s,border-color .2s;margin-bottom:-1px}
-.tab-btn:hover{color:rgba(255,255,255,.8)}
+.tab-btn:hover{color:var(--text)}
 .tab-btn.active{color:#fff;border-bottom-color:var(--btn-active)}
 .tab-content{padding:0 28px}
 .overview-grid{display:grid;grid-template-columns:1fr 280px;gap:24px}
@@ -725,7 +732,7 @@ select.filter-select.cs-native{display:none}
 
 .score-bar-outer { display:flex;align-items:center;gap:12px; }
 .score-bar-outer .score-bar-wrap { flex:1; }
-.score-bar-num { font-family:var(--font-d);font-size:1.2rem;font-weight:900;color:#fff;white-space:nowrap; }
+.score-bar-num { font-family:var(--font-d);font-size:1.2rem;font-weight:900;color:var(--text);white-space:nowrap; }
 .score-bar-denom { font-size:.65rem;color:var(--text-muted); }
 
 .unranked-notice {
@@ -971,6 +978,12 @@ select.filter-select.cs-native{display:none}
   align-items: stretch;
   overflow: hidden;
   position: relative;
+  /* Dark mode: gold fading into deep brown/black */
+  background: linear-gradient(135deg, #f5a623 0%, #c47d0e 60%, #8a5500 100%);
+}
+/* Light mode: gold fading into white */
+[data-theme="light"] .detail-cover {
+  background: linear-gradient(135deg, #f5a623 0%, #f7cb85 55%, #ffffff 100%);
 }
 
 .detail-cover-content {
@@ -1601,10 +1614,9 @@ select.filter-select.cs-native{display:none}
   background: transparent !important;
   backdrop-filter: none !important;
 }
-[data-theme="light"] .detail-rank-badge {
-  background: transparent !important;
-  backdrop-filter: none !important;
-}
+/* .detail-rank-badge deliberately keeps its dark pill in BOTH themes:
+   it sits on the gold cover, not the page background, so a transparent
+   fill left top-10 badges as amber-on-amber (1:1 contrast). */
 /* Also fix rank-num in table */
 [data-theme="light"] .rank-num {
   font-weight: 700 !important;
@@ -1879,7 +1891,14 @@ select.filter-select.cs-native{display:none}
 [data-theme="light"] .degree-chip   { background: rgba(124,111,205,0.08); color: #7c6fcd; }
 [data-theme="light"] .intake-chip   { background: rgba(245,166,35,0.08); }
 [data-theme="light"] .aid-card strong { color: var(--text); }
-[data-theme="light"] .cover-quick-stats { background: rgba(0,0,0,0.25); }
+/* Light mode: pale pill with dark text — it sits on the white end of the cover */
+[data-theme="light"] .cover-quick-stats {
+  background: rgba(255,255,255,0.55);
+  border-color: rgba(26,26,46,0.12);
+}
+[data-theme="light"] .cqs-val     { color: #1a1a2e; }
+[data-theme="light"] .cqs-label   { color: rgba(26,26,46,0.6); }
+[data-theme="light"] .cqs-divider { background: rgba(26,26,46,0.15); }
 
 /* Mobile */
 @media (max-width: 768px) {
