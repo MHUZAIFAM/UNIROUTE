@@ -362,10 +362,10 @@ select:focus-visible,
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .section-title{font-family:var(--font-d);font-size:1rem;font-weight:700;letter-spacing:-.01em;color:#fff;text-shadow:none}
 .see-all-btn{background:transparent;border:1px solid var(--border);border-radius:50px;padding:5px 14px;color:var(--text-muted);font-size:.76rem;cursor:pointer;transition:color .2s,border-color .2s}
-.see-all-btn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.see-all-btn:hover{color:var(--text);border-color:rgba(255,255,255,.3)}
 .program-chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{padding:8px 16px;border-radius:50px;background:var(--surface);border:1px solid var(--border);font-size:.82rem;color:var(--text-muted);cursor:pointer;transition:background .2s,color .2s,border-color .2s}
-.chip:hover{background:rgba(245,166,35,.1);color:#fff;border-color:rgba(245,166,35,.35)}
+.chip:hover{background:rgba(245,166,35,.1);color:var(--text);border-color:rgba(245,166,35,.35)}
 
 /*
  UNIVERSITY CARDS
@@ -388,7 +388,7 @@ select:focus-visible,
 .qs-label{font-size:.68rem;color:var(--text-muted)}
 .qs-val{font-size:.78rem;font-weight:700;color:var(--accent)}
 .uni-view-btn{margin-top:8px;padding:8px 0;width:100%;border-radius:50px;border:1px solid var(--btn-bg);background:transparent;color:rgba(255,255,255,.8);font-size:.78rem;font-weight:700;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.05em}
-.uni-view-btn:hover{background:var(--btn-bg);color:#fff}
+.uni-view-btn:hover{background:var(--btn-bg);color:var(--text)}
 
 /*
  PAGE WRAP (shared across pages)
@@ -398,7 +398,7 @@ select:focus-visible,
 .page-title{font-family:var(--font-d);font-size:1.4rem;font-weight:700;letter-spacing:-.02em;color:#fff}
 .page-subtitle{font-size:.8rem;color:var(--text-muted);margin-top:4px}
 .back-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--border);border-radius:50px;padding:7px 16px;color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:color .2s,border-color .2s;margin:0 28px 16px}
-.back-btn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.back-btn:hover{color:var(--text);border-color:rgba(255,255,255,.3)}
 .link-btn{background:transparent;border:none;color:var(--accent);font-size:.85rem;cursor:pointer;padding:0;font-family:var(--font-b)}
 .link-btn:hover{text-decoration:underline}
 
@@ -411,7 +411,7 @@ select:focus-visible,
 .toolbar-search:focus{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
 .region-chips{display:flex;flex-wrap:wrap;gap:8px}
 .rchip{padding:5px 14px;border-radius:50px;background:var(--surface);border:1px solid var(--border);font-size:.76rem;color:var(--text-muted);cursor:pointer;transition:background .2s,color .2s,border-color .2s}
-.rchip:hover,.rchip.active{background:rgba(245,166,35,.15);color:#fff;border-color:rgba(245,166,35,.35)}
+.rchip:hover,.rchip.active{background:rgba(245,166,35,.15);color:var(--text);border-color:rgba(245,166,35,.35)}
 .countries-body{padding:0 28px}
 .region-group{margin-bottom:32px}
 .region-heading{font-family:var(--font-b);font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
@@ -566,7 +566,7 @@ select.filter-select.cs-native{display:none}
 .prog-badge-degree.phd{background:rgba(255,215,0,.12);color:var(--gold);border:1px solid rgba(255,215,0,.25)}
 .prog-badge-degree.mba{background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.25)}
 .prog-search-btn{padding:4px 10px;border-radius:50px;border:1px solid var(--btn-bg);background:transparent;color:rgba(255,255,255,.7);font-size:.72rem;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
-.prog-search-btn:hover{background:var(--btn-bg);color:#fff}
+.prog-search-btn:hover{background:var(--btn-bg);color:var(--text)}
 
 /*
  INTAKE PAGE
@@ -588,14 +588,14 @@ select.filter-select.cs-native{display:none}
 .intake-countries{margin-top:4px}
 .intake-country-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
 .ichip{padding:4px 11px;border-radius:50px;background:rgba(255,255,255,.06);border:1px solid var(--border);font-size:.72rem;color:var(--text-muted);cursor:pointer;transition:background .2s,color .2s}
-.ichip:hover{background:rgba(245,166,35,.1);color:#fff}
+.ichip:hover{background:rgba(245,166,35,.1);color:var(--text)}
 
 /*
  PAGINATION
  */
 .pagination{display:flex;justify-content:center;gap:6px;padding:24px 28px}
 .page-btn{padding:7px 13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-family:var(--font-b);font-size:.8rem;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
-.page-btn:hover{background:var(--surface-hover);color:#fff;border-color:rgba(245,166,35,.25)}
+.page-btn:hover{background:var(--surface-hover);color:var(--text);border-color:rgba(245,166,35,.25)}
 .page-btn.active{background:var(--btn-active);color:#fff;border-color:var(--btn-active)}
 .page-btn.disabled{opacity:.3;cursor:not-allowed}
 
@@ -771,7 +771,7 @@ select.filter-select.cs-native{display:none}
  background:transparent;color:rgba(255,255,255,.75);font-size:.8rem;
  cursor:pointer;transition:background .2s,color .2s,border-color .2s;font-family:var(--font-b);
 }
-.ghost-btn:hover { background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.3); }
+.ghost-btn:hover { background:rgba(255,255,255,.08);color:var(--text);border-color:rgba(255,255,255,.3); }
 
 /*
  SEARCH — RICH EMPTY STATE
@@ -799,7 +799,7 @@ select.filter-select.cs-native{display:none}
  background:none;border:none;color:var(--text-muted);cursor:pointer;
  font-size:1rem;line-height:1;padding:0;transition:color .2s;
 }
-.active-pill button:hover { color:#fff; }
+.active-pill button:hover { color:var(--text); }
 
 .results-page-info { font-size:.75rem;color:var(--text-dim); }
 
@@ -1868,7 +1868,7 @@ select.filter-select.cs-native{display:none}
 }
 .program-chip:hover {
   background: rgba(245,166,35,0.1);
-  color: #fff;
+  color: var(--text);
   border-color: rgba(245,166,35,0.3);
 }
 
