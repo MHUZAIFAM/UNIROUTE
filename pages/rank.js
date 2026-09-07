@@ -134,14 +134,15 @@ async function _loadRankings(page=0, search='', country='', region='') {
               <tbody>
                 ${data.universities.map(u => {
                   const rc = rankColor(u.rank);
+                  const ri = rankInk(u.rank);
                   return `<tr class="rank-row" onclick="navigateTo('university',{id:${u.id}})">
-                    <td><span class="rank-num" style="color:${rc}">#${u.rank}</span></td>
+                    <td><span class="rank-num" style="color:${ri}">#${u.rank}</span></td>
                     <td class="rank-name-cell">
                       <span class="rank-alpha2">${(u.alpha2||'').toUpperCase()}</span>
                       <span>${escHtml(u.name)}</span>
                     </td>
                     <td class="rank-country">${escHtml(u.country)}</td>
-                    <td><span class="score-pill" style="background:${rc}22;color:${rc}">${u.overall||'—'}</span></td>
+                    <td><span class="score-pill" style="background:${rc}22;color:${ri}">${u.overall||'—'}</span></td>
                     <td><span class="score-pill">${u.ar_score||'—'}</span></td>
                   </tr>`;
                 }).join('')}

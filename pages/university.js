@@ -150,6 +150,7 @@ function _renderUniversityData(u, activeTab) {
 
 // ── Tab 1: Overview ────────────────────────────
 function _overviewTab(u, rc) {
+  const ri = rankInk(u.rank);
   const scores = [
     { label:'QS Overall',    val: u.overall  },
     { label:'Academic Rep.', val: u.ar_score },
@@ -202,7 +203,7 @@ function _overviewTab(u, rc) {
               <div class="qs-score-row">
                 <span class="qsr-label">${m.label}</span>
                 <div class="qsr-bar-wrap"><div class="qsr-bar" style="width:${Math.min(parseFloat(m.val),100)}%;background:${rc}"></div></div>
-                <span class="qsr-val" style="color:${rc}">${m.val}</span>
+                <span class="qsr-val" style="color:${ri}">${m.val}</span>
               </div>`).join('')}
           </div>
         </div>` : ''}
@@ -232,6 +233,7 @@ function _overviewTab(u, rc) {
 
 // ── Tab 2: Admissions ──────────────────────────
 function _admissionsTab(u, rc) {
+  const ri = rankInk(u.rank);
   const hasAdmissions = u.acceptance_rate || u.tuition_ug_intl || u.tuition_pg_intl ||
                         u.ielts_min || u.toefl_min || u.gpa_min ||
                         u.deadline_ug || u.deadline_pg || u.intakes || u.living_cost;
@@ -277,9 +279,9 @@ function _admissionsTab(u, rc) {
       <div class="adm-section">
         <h3 class="panel-title">Entry Requirements</h3>
         <div class="req-grid">
-          ${u.ielts_min ? `<div class="req-card"><span class="req-name">IELTS</span><span class="req-val" style="color:${rc}">${escHtml(u.ielts_min)}</span><span class="req-sub">Minimum score</span></div>` : ''}
-          ${u.toefl_min ? `<div class="req-card"><span class="req-name">TOEFL iBT</span><span class="req-val" style="color:${rc}">${escHtml(u.toefl_min)}</span><span class="req-sub">Minimum score</span></div>` : ''}
-          ${u.gpa_min   ? `<div class="req-card"><span class="req-name">GPA</span><span class="req-val" style="color:${rc}">${escHtml(u.gpa_min)}</span><span class="req-sub">Minimum GPA</span></div>` : ''}
+          ${u.ielts_min ? `<div class="req-card"><span class="req-name">IELTS</span><span class="req-val" style="color:${ri}">${escHtml(u.ielts_min)}</span><span class="req-sub">Minimum score</span></div>` : ''}
+          ${u.toefl_min ? `<div class="req-card"><span class="req-name">TOEFL iBT</span><span class="req-val" style="color:${ri}">${escHtml(u.toefl_min)}</span><span class="req-sub">Minimum score</span></div>` : ''}
+          ${u.gpa_min   ? `<div class="req-card"><span class="req-name">GPA</span><span class="req-val" style="color:${ri}">${escHtml(u.gpa_min)}</span><span class="req-sub">Minimum GPA</span></div>` : ''}
         </div>
       </div>` : ''}
 
@@ -298,6 +300,7 @@ function _admissionsTab(u, rc) {
 
 // ── Tab 3: Academics ───────────────────────────
 function _academicsTab(u, rc) {
+  const ri = rankInk(u.rank);
   const scores = [
     { label:'QS Overall',    val: u.overall  },
     { label:'Academic Rep.', val: u.ar_score },
@@ -322,7 +325,7 @@ function _academicsTab(u, rc) {
             <div class="metric-card-full">
               <div class="mcf-header">
                 <span class="mcf-label">${m.label}</span>
-                <span class="mcf-val" style="color:${rc}">${m.val}</span>
+                <span class="mcf-val" style="color:${ri}">${m.val}</span>
               </div>
               <div class="mcf-bar-wrap"><div class="mcf-bar" style="width:${Math.min(parseFloat(m.val),100)}%;background:linear-gradient(90deg,${rc},${rc}88)"></div></div>
               <span class="mcf-sub">${m.val} out of 100</span>

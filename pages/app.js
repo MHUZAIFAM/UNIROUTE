@@ -20,6 +20,25 @@ function rankColor(rank) {
   return isLight ? '#c4bce8' : '#8a8a8a';                 // pale lilac / dim grey
 }
 
+// ── Rank color for TEXT ────────────────────────
+// rankColor() is tuned for fills (card tops, score bars, badge borders), where
+// light mode wants pale tints. Those same values fail as text on a near-white
+// background — the top-10 amber is 1.94:1 and the pale lilacs reach only 1.7:1.
+// This returns the same tier semantics at a legible weight; dark mode already
+// clears 4.5:1, so it passes through.
+function rankInk(rank) {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (!isLight) return rankColor(rank);
+
+  const r = parseInt(rank);
+  if (!r)       return '#5b4fcf';
+  if (r <= 10)  return '#8a5c00';  // deep gold — #f5a623 is 1.94:1 on white
+  if (r <= 50)  return '#4f43c4';
+  if (r <= 100) return '#5b4fcf';
+  if (r <= 200) return '#6255cc';
+  return '#6a5dd0';
+}
+
 // ── Toast ──────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
