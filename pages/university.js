@@ -367,24 +367,27 @@ async function _loadUniversityPrograms(u) {
       return;
     }
 
+    const levels = data.byDegree.map(d => `${d.count} ${escHtml(d.degree_level)}`).join(' · ');
+    const sourceUrl = data.fields.flatMap(f => f.programs).find(p => p.url)?.url;
+
     panel.innerHTML = `
-      <p class="results-meta-txt" style="margin-bottom:12px">
-        <strong>${data.total}</strong> ${data.total===1?'program':'programs'}
-        across ${data.fields.length} ${data.fields.length===1?'field':'fields'}
+      <p class="results-meta-txt" style="margin-bottom:4px">
+        <strong>${data.total}</strong> ${data.total===1?'program':'programs'}${levels?` — ${levels}`:''}
+      </p>
+      <p class="subtle-note" style="margin-bottom:14px">
+        Listed from the university's own published catalogue.${sourceUrl
+          ? ` <a href="${escHtml(sourceUrl)}" target="_blank" rel="noopener">View source</a>` : ''}
       </p>
       ${data.fields.map(f => `
         <div class="program-group">
           <h4 class="program-group-title">${escHtml(f.field_name)}</h4>
           <div class="programs-chips">
             ${f.programs.map(p => `
-              <span class="program-chip" data-prog="${p.id}">
+              <span class="program-chip${p.url?' has-src':''}"${p.url?` title="Source: ${escHtml(p.url)}"`:''}>
                 ${escHtml(p.name)} <span class="degree-chip">${escHtml(p.degree)}</span>
               </span>`).join('')}
           </div>
         </div>`).join('')}`;
-
-    panel.querySelectorAll('[data-prog]').forEach(el =>
-      el.addEventListener('click', () => navigateTo('programs', { programId: el.dataset.prog })));
 
   } catch (err) {
     console.error('University programs error:', err);

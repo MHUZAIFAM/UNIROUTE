@@ -341,7 +341,16 @@ async function _renderProgramUniversities(programId, page=0) {
                 <button class="ghost-btn" id="progSearchFallback">Search universities by name instead</button>
               </div>
             </div>`
-          : `<div class="uni-grid">${data.universities.map(u=>uniCardHTML(u)).join('')}</div>`}
+          : `<p class="subtle-note" style="margin-bottom:14px">
+               Matched on subject area — each university's own program names are shown below.
+             </p>
+             <div class="uni-grid">${data.universities.map(u=>`
+               <div class="prog-match">
+                 ${uniCardHTML(u)}
+                 ${u.matched_programs?.length ? `<p class="prog-match-list">${
+                   u.matched_programs.slice(0,3).map(n=>escHtml(n)).join(' · ')
+                 }${u.matched_programs.length>3?` · +${u.matched_programs.length-3} more`:''}</p>` : ''}
+               </div>`).join('')}</div>`}
         </div>
         <div id="progPages"></div>
       </div>`;

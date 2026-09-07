@@ -41,30 +41,49 @@ router.get('/:id/programs', async (req, res) => {
       return res.status(400).json({ error: 'Invalid university id' });
     }
 
+    // Programs are stored as the university publishes them, so name and degree
+    // come from university_programs itself. field_id is optional — grouped
+    // under "Other programs" when a program hasn't been categorised.
     const result = await db.query(
-      `SELECT p.id, p.name, p.degree, f.id AS field_id, f.name AS field_name,
-              up.source, up.url
+      `SELECT up.id, up.name, up.degree_level, up.url, up.verification,
+              f.id AS field_id, f.name AS field_name
        FROM university_programs up
-       JOIN programs p ON p.id = up.program_id
-       JOIN fields   f ON f.id = p.field_id
+       LEFT JOIN fields f ON f.id = up.field_id
        WHERE up.university_id = $1
-       ORDER BY f.name ASC, p.name ASC, p.degree ASC`,
+       ORDER BY (f.name IS NULL), f.name ASC,
+                CASE up.degree_level
+                  WHEN 'Bachelor''s' THEN 1 WHEN 'Master''s' THEN 2
+                  WHEN 'PhD' THEN 3 ELSE 4 END,
+                up.name ASC`,
       [uniId]
     );
 
     const byField = [];
     const index   = new Map();
     for (const row of result.rows) {
-      if (!index.has(row.field_id)) {
-        index.set(row.field_id, { field_id: row.field_id, field_name: row.field_name, programs: [] });
-        byField.push(index.get(row.field_id));
+      const key = row.field_id ?? 'other';
+      if (!index.has(key)) {
+        index.set(key, {
+          field_id: row.field_id,
+          field_name: row.field_name || 'Other programs',
+          programs: [],
+        });
+        byField.push(index.get(key));
       }
-      index.get(row.field_id).programs.push({
-        id: row.id, name: row.name, degree: row.degree, source: row.source, url: row.url,
+      index.get(key).programs.push({
+        id: row.id, name: row.name, degree: row.degree_level,
+        url: row.url, verification: row.verification,
       });
     }
 
-    res.json({ total: result.rows.length, fields: byField });
+    const levels = await db.query(
+      `SELECT degree_level, COUNT(*)::int AS count
+       FROM university_programs WHERE university_id = $1
+       GROUP BY degree_level ORDER BY degree_level`,
+      [uniId]
+    );
+
+    res.json({ total: result.rows.length, byDegree: levels.rows, fields: byField });
   } catch (err) {
     console.error('GET /api/universities/:id/programs failed:', err);
     res.status(500).json({ error: 'Internal server error' });

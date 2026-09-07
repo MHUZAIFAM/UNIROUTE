@@ -406,6 +406,11 @@ select:focus-visible,
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;padding:4px 28px 18px;gap:12px}
 .page-title{font-family:var(--font-d);font-size:1.4rem;font-weight:700;letter-spacing:-.02em;color:#fff}
 .page-subtitle{font-size:.8rem;color:var(--text-muted);margin-top:4px}
+/* Program match results — university card plus its real matched program names */
+.prog-match{display:flex;flex-direction:column}
+.prog-match-list{font-size:.7rem;color:var(--text-muted);line-height:1.5;padding:6px 4px 0}
+.program-chip.has-src{cursor:help}
+
 /* Low-key caveat under a page subtitle — informative, not a warning banner.
    Light mode sets its own colour because --text-muted only reaches 3.27:1
    there, below AA for text this size. */

@@ -69,15 +69,16 @@ router.get('/', async (req, res) => {
     );
     const total = parseInt(countRes.rows[0].count);
 
-    // university_count lets the UI show which programs actually have links yet
+    // university_count counts universities with a real, imported program in the
+    // same field — that is what "Find Unis" resolves against.
     const result = await db.query(
       `SELECT p.id, p.name, p.degree, p.field_id, f.name AS field_name,
-              COUNT(up.university_id) AS university_count
+              (SELECT COUNT(DISTINCT up.university_id)
+                 FROM university_programs up
+                WHERE up.field_id = p.field_id) AS university_count
        FROM programs p
        JOIN fields f ON f.id = p.field_id
-       LEFT JOIN university_programs up ON up.program_id = p.id
        ${where}
-       GROUP BY p.id, p.name, p.degree, p.field_id, f.name
        ORDER BY f.name ASC, p.name ASC, p.degree ASC
        LIMIT $${idx} OFFSET $${idx + 1}`,
       [...values, pageSize, offset]
@@ -108,7 +109,7 @@ router.get('/:id/universities', async (req, res) => {
     const offset   = page * pageSize;
 
     const prog = await db.query(
-      `SELECT p.id, p.name, p.degree, f.name AS field_name
+      `SELECT p.id, p.name, p.degree, p.field_id, f.name AS field_name
        FROM programs p JOIN fields f ON f.id = p.field_id
        WHERE p.id = $1`,
       [programId]
@@ -116,21 +117,27 @@ router.get('/:id/universities', async (req, res) => {
     if (prog.rows.length === 0) {
       return res.status(404).json({ error: 'Program not found' });
     }
+    const fieldId = prog.rows[0].field_id;
 
+    // Universities are matched through the field, since imported programs carry
+    // the institution's own name ("MSc Civil Engineering") rather than a
+    // reference to this catalogue entry.
     const countRes = await db.query(
-      `SELECT COUNT(*) FROM university_programs WHERE program_id = $1`,
-      [programId]
+      `SELECT COUNT(DISTINCT university_id) FROM university_programs WHERE field_id = $1`,
+      [fieldId]
     );
     const total = parseInt(countRes.rows[0].count);
 
     const result = await db.query(
-      `SELECT u.*, up.source, up.url AS program_url
+      `SELECT u.*,
+              ARRAY_AGG(DISTINCT up.name ORDER BY up.name) AS matched_programs
        FROM university_programs up
        JOIN universities u ON u.id = up.university_id
-       WHERE up.program_id = $1
+       WHERE up.field_id = $1
+       GROUP BY u.id
        ORDER BY u.rank_num ASC NULLS LAST, u.name ASC
        LIMIT $2 OFFSET $3`,
-      [programId, pageSize, offset]
+      [fieldId, pageSize, offset]
     );
 
     res.json({
