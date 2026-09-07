@@ -189,13 +189,9 @@
 
 /* Light detail cover alpha2 */
 [data-theme="light"] .detail-alpha2 { color:rgba(26,26,46,0.2); }
-/* Solid white pill + dark ink. The rank colour stays on the border (set inline)
-   so the tier is still encoded, but it can't be used for the text: on the gold
-   cover a top-10 badge is amber-on-amber (1:1) and unreadable. */
-[data-theme="light"] .detail-rank-badge {
-  background: rgba(255,255,255,0.92);
-  color: #1a1a2e !important;
-}
+/* Solid white pill so the dark label reads; text colour comes from the
+   var(--text) rule on .detail-rank-badge itself. */
+[data-theme="light"] .detail-rank-badge { background: rgba(255,255,255,0.92); }
 
 /* Light unranked notice */
 [data-theme="light"] .unranked-notice { background:rgba(124,111,205,0.06); border-color:rgba(124,111,205,0.15); }
@@ -1029,6 +1025,10 @@ select.filter-select.cs-native{display:none}
   font-size: .72rem;
   font-weight: 700;
   background: rgba(0,0,0,.5);
+  /* The badge sits on the gold cover, so its pill is mid-tone in both themes —
+     no rank colour can hold 4.5:1 as text there. The tier stays encoded by the
+     border (set inline); the label uses the theme's text token. */
+  color: var(--text) !important;
   border: 1px solid;
   border-radius: 50px;
   padding: 3px 12px;

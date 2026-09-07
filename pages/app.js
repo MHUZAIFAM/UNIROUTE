@@ -9,12 +9,15 @@ function rankColor(rank) {
   const r       = parseInt(rank);
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
-  if (!r)       return isLight ? '#7c6fcd' : '#6550a3';
+  // Dark-mode values are kept bright enough to clear 4.5:1 against both the
+  // page background (#0f0f0f) and the card badge pill. The old #888888/#555555
+  // greys sat at 2.3–2.6:1 and were effectively invisible.
+  if (!r)       return isLight ? '#7c6fcd' : '#9b87e0';   // purple / light purple
   if (r <= 10)  return '#f5a623';                          // amber — same both modes
   if (r <= 50)  return isLight ? '#5b4fcf' : '#e8e8e8';   // deep purple / light grey
-  if (r <= 100) return isLight ? '#7c6fcd' : '#b0b0b0';   // medium purple / mid grey
-  if (r <= 200) return isLight ? '#a89ddd' : '#888888';   // soft lilac / dark grey
-  return isLight ? '#c4bce8' : '#555555';                 // pale lilac / dim grey
+  if (r <= 100) return isLight ? '#7c6fcd' : '#c4c4c4';   // medium purple / mid grey
+  if (r <= 200) return isLight ? '#a89ddd' : '#a3a3a3';   // soft lilac / grey
+  return isLight ? '#c4bce8' : '#8a8a8a';                 // pale lilac / dim grey
 }
 
 // ── Toast ──────────────────────────────────────
