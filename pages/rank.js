@@ -212,6 +212,7 @@ async function renderPrograms(params={}) {
         <div>
           <h2 class="page-title">Programs &amp; Fields</h2>
           <p class="page-subtitle" id="progSubtitle">Loading…</p>
+          <p class="subtle-note" id="progNote" hidden></p>
         </div>
       </div>
       <div id="progFilters"></div>
@@ -264,14 +265,17 @@ async function renderPrograms(params={}) {
       (byField[p.field_name] ||= []).push(p);
     });
 
+    // Quiet note in the header rather than a banner over the catalogue — the
+    // catalogue is useful on its own, and the full explanation lives on the
+    // individual program pages where it actually blocks something.
     const anyLinked = data.programs.some(p => parseInt(p.university_count) > 0);
-    const notice = anyLinked ? '' : `
-      <div class="unranked-notice" style="margin-bottom:18px">
-        Which universities offer each program hasn't been recorded yet — the catalogue
-        below lists the programs themselves.
-      </div>`;
+    const note = document.getElementById('progNote');
+    if (note) {
+      note.textContent = anyLinked ? '' : 'University listings for each program aren’t available yet.';
+      note.hidden = anyLinked;
+    }
 
-    body.innerHTML = notice + Object.entries(byField).map(([fieldName, progs]) => `
+    body.innerHTML = Object.entries(byField).map(([fieldName, progs]) => `
       <div class="program-group">
         <h3 class="program-group-title">${escHtml(fieldName)}</h3>
         <div class="program-chips-row">
