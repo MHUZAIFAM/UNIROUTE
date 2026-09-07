@@ -31,14 +31,48 @@ import openpyxl
 import psycopg2
 from psycopg2.extras import execute_batch
 
-REQUIRED = ["University ID", "University", "Degree Level", "Program Name"]
+# Workbooks have used slightly different headers across batches; accept any of
+# these spellings for each logical column.
+ALIASES = {
+    "uni_id":  ["University ID"],
+    "uni":     ["University"],
+    "level":   ["Degree Level", "Level"],
+    "program": ["Program Name", "Program name", "Program / institutional note"],
+    "source":  ["Official Source", "Official source"],
+    "verify":  ["Verification Status", "Verification / completeness"],
+}
+REQUIRED_KEYS = ["uni_id", "uni", "level", "program"]
 
 DEGREE = {
     "bachelor's": "Bachelor's", "bachelor": "Bachelor's", "bachelors": "Bachelor's",
     "master's": "Master's", "master": "Master's", "masters": "Master's",
     "phd": "PhD", "doctorate": "PhD", "doctoral": "PhD",
+    "associate's": "Associate's", "associate": "Associate's",
     "n/a": "N/A", "": "N/A",
 }
+
+# Rows the workbooks use to track research progress rather than record a
+# program. They are explicitly marked as unverified, so importing them would
+# put "extraction pending" on a university page as though it were a degree.
+PLACEHOLDER_LEVELS = {
+    "status note", "institution type note", "institution status",
+    "classification note", "institution note",
+}
+# Some batches put the note marker in the verification column instead, leaving
+# the level as "N/A".
+PLACEHOLDER_VERIFICATIONS = {
+    "classification note", "institution note", "institution type note",
+    "status note",
+}
+
+
+def is_placeholder(level, verification):
+    if str(level or "").strip().lower() in PLACEHOLDER_LEVELS:
+        return True
+    v = str(verification or "").strip().lower()
+    if v in PLACEHOLDER_VERIFICATIONS:
+        return True
+    return v.startswith("queued") or "not verified" in v
 
 
 def load_env(path):
@@ -76,15 +110,24 @@ def read_sheet(path, sheet="Programs"):
     if not rows:
         sys.exit("Sheet is empty")
     header = [str(h).strip() if h is not None else "" for h in rows[0]]
-    missing = [c for c in REQUIRED if c not in header]
+
+    # resolve each logical column to whichever alias this workbook uses
+    col = {}
+    for key, names in ALIASES.items():
+        for n in names:
+            if n in header:
+                col[key] = header.index(n)
+                break
+    missing = [k for k in REQUIRED_KEYS if k not in col]
     if missing:
-        sys.exit(f"Missing required column(s): {missing}\nFound: {header}")
-    idx = {name: i for i, name in enumerate(header)}
+        sys.exit(f"Missing required column(s) {missing}.\n"
+                 f"Accepted names: { {k: ALIASES[k] for k in missing} }\nFound: {header}")
+
     out = []
     for r in rows[1:]:
         if all(c is None for c in r):
             continue
-        out.append({name: (r[i] if i < len(r) else None) for name, i in idx.items()})
+        out.append({k: (r[i] if i < len(r) else None) for k, i in col.items()})
     return out
 
 
@@ -135,17 +178,22 @@ def main():
     cur.execute("SELECT id, name FROM fields")
     match_field = make_field_matcher(cur.fetchall())
 
-    uni_ids = sorted({int(r["University ID"]) for r in rows
-                      if str(r["University ID"] or "").strip().isdigit()})
+    uni_ids = sorted({int(r["uni_id"]) for r in rows
+                      if str(r["uni_id"] or "").strip().isdigit()})
     cur.execute("SELECT id, name FROM universities WHERE id = ANY(%s)", (uni_ids,))
     db_unis = {i: n for i, n in cur.fetchall()}
 
     to_insert, problems = [], []
-    mapped = unmapped = 0
+    mapped = unmapped = skipped_placeholder = 0
 
     for r in rows:
-        raw_id = str(r["University ID"] or "").strip()
-        name = str(r["Program Name"] or "").strip()
+        # progress-tracking rows, not programs — explicitly marked unverified
+        if is_placeholder(r.get("level"), r.get("verify")):
+            skipped_placeholder += 1
+            continue
+
+        raw_id = str(r["uni_id"] or "").strip()
+        name = str(r["program"] or "").strip()
         if not raw_id.isdigit() or not name:
             problems.append(f"missing id/name: {str(r)[:70]}")
             continue
@@ -155,21 +203,22 @@ def main():
         if db_name is None:
             problems.append(f"id {uid}: not present in universities table")
             continue
-        if norm(db_name) != norm(r["University"]):
-            problems.append(f'id {uid}: name mismatch - sheet "{r["University"]}" vs db "{db_name}"')
+        if norm(db_name) != norm(r["uni"]):
+            problems.append(f'id {uid}: name mismatch - sheet "{r["uni"]}" vs db "{db_name}"')
             continue
 
         fid = match_field(name)
         mapped += fid is not None
         unmapped += fid is None
         to_insert.append((
-            uid, name, norm_degree(r["Degree Level"]), fid,
-            r.get("Official Source") or None,
-            r.get("Verification Status") or None,
+            uid, name, norm_degree(r["level"]), fid,
+            r.get("source") or None,
+            r.get("verify") or None,
             os.path.basename(path),
         ))
 
     print(f"\n  importable   : {len(to_insert)}")
+    print(f"  placeholders : {skipped_placeholder} (queued/unverified rows — not imported)")
     print(f"  skipped      : {len(problems)}")
     print(f"  field-mapped : {mapped}   (uncategorised: {unmapped} - imported, just no field)")
     if problems:
