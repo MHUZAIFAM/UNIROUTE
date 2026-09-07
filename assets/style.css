@@ -13,6 +13,10 @@
  --border: rgba(255,255,255,0.08);
  --border-light: rgba(255,255,255,0.13);
  --accent: #f5a623;
+ /* --accent is the gold for FILLS (buttons, bars). --accent-ink is the gold for
+    TEXT: #f5a623 is only 1.94:1 on a light background, so light mode needs a
+    deeper gold to stay legible. */
+ --accent-ink: #f5a623;
  --accent-dim: rgba(245,166,35,0.18);
  --accent-glow: rgba(245,166,35,0.35);
  --card-bg: #1c1c1c;
@@ -45,6 +49,7 @@
   --border:        rgba(124,111,205,0.15);
   --border-light:  rgba(124,111,205,0.22);
   --accent:        #f5a623;
+  --accent-ink:    #8a5c00;   /* clears 4.5:1 on white and on the pale gold tints */
   --accent-dim:    rgba(245,166,35,0.15);
   --accent-glow:   rgba(245,166,35,0.3);
   --card-bg:       #ffffff;
@@ -139,7 +144,7 @@
 [data-theme="light"] .bc-sep { color:var(--text-dim); }
 
 /* Light stats bar */
-[data-theme="light"] .stat-num { color:var(--text); }
+[data-theme="light"] .stat-num { color:var(--accent-ink); }
 [data-theme="light"] .stat-lbl { color:var(--text-muted); }
 [data-theme="light"] .stat-divider { background:var(--border); }
 
@@ -386,7 +391,7 @@ select:focus-visible,
 .uni-card-domain{font-size:.71rem;color:var(--text-dim)}
 .uni-qs-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
 .qs-label{font-size:.68rem;color:var(--text-muted)}
-.qs-val{font-size:.78rem;font-weight:700;color:var(--accent)}
+.qs-val{font-size:.78rem;font-weight:700;color:var(--accent-ink)}
 .uni-view-btn{margin-top:8px;padding:8px 0;width:100%;border-radius:50px;border:1px solid var(--btn-bg);background:transparent;color:rgba(255,255,255,.8);font-size:.78rem;font-weight:700;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.05em}
 .uni-view-btn:hover{background:var(--btn-bg);color:var(--text)}
 
@@ -1419,11 +1424,15 @@ select.filter-select.cs-native{display:none}
 [data-theme="light"] .qs-label       { color: rgba(26,26,46,0.5) !important; }
 [data-theme="light"] .uni-alpha2     { color: rgba(26,26,46,0.25) !important; }
 [data-theme="light"] .uni-view-btn   {
-  background: #ede9f8 !important;
-  color: #1a1a2e !important;
-  border: 1px solid rgba(124,111,205,0.2) !important;
+  background: rgba(245,166,35,0.10) !important;
+  color: var(--accent-ink) !important;
+  border: 1px solid rgba(245,166,35,0.45) !important;
 }
-[data-theme="light"] .uni-view-btn:hover { background: #ddd5f0 !important; }
+[data-theme="light"] .uni-view-btn:hover {
+  background: var(--accent) !important;
+  color: #1a1a2e !important;
+  border-color: var(--accent) !important;
+}
 
 /* Search inputs — visible border + dark text */
 [data-theme="light"] .search-big {
@@ -1485,12 +1494,16 @@ select.filter-select.cs-native{display:none}
 
 /* Carousel card */
 [data-theme="light"] .card-shadow { background: rgba(124,111,205,0.06) !important; }
+/* Solid gold hero CTA — dark ink on amber is 8.42:1 (white would be 2.03:1) */
 [data-theme="light"] .card-cta {
-  background: transparent !important;
-  border: 1px solid rgba(26,26,46,0.25) !important;
+  background: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
   color: #1a1a2e !important;
 }
-[data-theme="light"] .card-cta:hover { background: rgba(26,26,46,0.05) !important; }
+[data-theme="light"] .card-cta:hover {
+  background: #ffb838 !important;
+  border-color: #ffb838 !important;
+}
 
 /* Stats bar */
 [data-theme="light"] .stats-bar { background: #ffffff !important; border-color: rgba(124,111,205,0.15) !important; }
@@ -1571,14 +1584,8 @@ select.filter-select.cs-native{display:none}
   box-shadow: 0 4px 24px rgba(124,111,205,0.1) !important;
 }
 [data-theme="light"] .card-label { color: #1a1a2e !important; }
-[data-theme="light"] .card-cta {
-  border: 1.5px solid rgba(26,26,46,0.2) !important;
-  color: #1a1a2e !important;
-  background: transparent !important;
-}
-[data-theme="light"] .card-cta:hover {
-  background: rgba(26,26,46,0.05) !important;
-}
+/* (Gold CTA styling lives in the "Carousel card" block above — this rule
+   previously re-flattened it back to a transparent outline.) */
 
 /* Light mode dot — ring style matching dark mode */
 [data-theme="light"] .dot {
@@ -1609,9 +1616,11 @@ select.filter-select.cs-native{display:none}
   color: #1a1a2e !important;
 }
 
-/* Light mode rank badges — transparent fill, colored border + text only */
+/* Light mode card rank badge — solid pill so the label reads against the now
+   richer card-top tint; the tier stays encoded by the border (set inline). */
 [data-theme="light"] .uni-rank-badge {
-  background: transparent !important;
+  background: rgba(255,255,255,0.92) !important;
+  color: #1a1a2e !important;
   backdrop-filter: none !important;
 }
 /* .detail-rank-badge deliberately keeps its dark pill in BOTH themes:

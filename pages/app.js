@@ -130,7 +130,7 @@ function uniCardHTML(u) {
   const alpha2  = u.alpha2 ? u.alpha2.toUpperCase() : '—';
   return `
     <div class="uni-card" onclick="navigateTo('university',{id:${u.id}})">
-      <div class="uni-card-top" style="background:linear-gradient(135deg,${rc}40,${rc}18)">
+      <div class="uni-card-top" style="background:linear-gradient(135deg,${rc}66,${rc}26)">
         <span class="uni-alpha2">${alpha2}</span>
         <span class="uni-rank-badge" style="border-color:${rc};color:${rc}">${rankTxt}</span>
       </div>
