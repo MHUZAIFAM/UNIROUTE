@@ -51,6 +51,36 @@ async function apiGetRankings(params={}) {
   return apiFetch('/rankings?' + p.toString());
 }
 
+// ── Programs & fields ──────────────────────────
+async function apiGetFields() {
+  return apiFetch('/programs/fields');
+}
+
+async function apiGetDegrees() {
+  return apiFetch('/programs/degrees');
+}
+
+async function apiGetPrograms(params={}) {
+  const p = new URLSearchParams();
+  if (params.q)      p.set('q',      params.q);
+  if (params.field)  p.set('field',  params.field);
+  if (params.degree) p.set('degree', params.degree);
+  if (params.page)   p.set('page',   params.page);
+  if (params.limit)  p.set('limit',  params.limit);
+  return apiFetch('/programs?' + p.toString());
+}
+
+async function apiGetProgramUniversities(programId, params={}) {
+  const p = new URLSearchParams();
+  if (params.page)  p.set('page',  params.page);
+  if (params.limit) p.set('limit', params.limit);
+  return apiFetch('/programs/' + encodeURIComponent(programId) + '/universities?' + p.toString());
+}
+
+async function apiGetUniversityPrograms(universityId) {
+  return apiFetch('/universities/' + encodeURIComponent(universityId) + '/programs');
+}
+
 // ── Countries ──────────────────────────────────
 async function apiGetCountries() {
   return apiFetch('/countries');

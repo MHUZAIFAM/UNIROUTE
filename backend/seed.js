@@ -67,7 +67,22 @@ async function seed() {
       )
     `);
 
-    await client.query('TRUNCATE universities RESTART IDENTITY');
+    // Re-seeding wipes universities and renumbers their ids, which would orphan
+    // any university_programs links. Refuse to run if links exist, unless the
+    // caller explicitly opts in with --force.
+    const linkTable = await client.query(`SELECT to_regclass('university_programs') AS t`);
+    if (linkTable.rows[0].t) {
+      const { rows } = await client.query('SELECT COUNT(*) FROM university_programs');
+      const linkCount = parseInt(rows[0].count);
+      if (linkCount > 0 && !process.argv.includes('--force')) {
+        throw new Error(
+          `university_programs holds ${linkCount} link(s). Re-seeding renumbers ` +
+          `university ids and would orphan them. Re-run with --force to discard them.`
+        );
+      }
+    }
+
+    await client.query('TRUNCATE universities RESTART IDENTITY CASCADE');
     console.log('Table ready, inserting universities...');
 
     // Insert in batches of 500

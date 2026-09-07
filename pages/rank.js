@@ -183,76 +183,183 @@ function _rankFilter() {
   const region  = document.getElementById('rankRegion')?.value||'';
   _loadRankings(0, search, country, region);
 }
-
 // ═══════════════════════════════════════════════
-// PROGRAMS PAGE (uses local PROGRAMS/FIELDS data)
+// PROGRAMS PAGE (served from the API)
 // ═══════════════════════════════════════════════
 
-function renderPrograms(params={}) {
+let _programLists = null;
+
+async function _getProgramLists() {
+  if (!_programLists) {
+    const [fields, degrees] = await Promise.all([apiGetFields(), apiGetDegrees()]);
+    _programLists = { fields, degrees };
+  }
+  return _programLists;
+}
+
+async function renderPrograms(params={}) {
+  // A program id routes to that program's university list instead
+  if (params.programId) return _renderProgramUniversities(params.programId);
+
   const dv = document.getElementById('dynamicView');
   const fieldFilter  = params.field  || '';
   const degreeFilter = params.degree || '';
-
-  const degrees = [...new Set(PROGRAMS.map(p=>p.degree))].sort();
-  const fields  = FIELDS;
-
-  let programs = PROGRAMS;
-  if (fieldFilter)  programs = programs.filter(p => String(p.field_id) === String(fieldFilter));
-  if (degreeFilter) programs = programs.filter(p => p.degree === degreeFilter);
-
-  const byField = {};
-  programs.forEach(p => {
-    if (!byField[p.field_id]) byField[p.field_id] = [];
-    byField[p.field_id].push(p);
-  });
 
   dv.innerHTML = `
     <div class="page-wrap">
       ${backBtn('Home')}
       <div class="page-header">
         <div>
-          <h2 class="page-title">Programs & Fields</h2>
-          <p class="page-subtitle">${FIELDS.length} fields · ${PROGRAMS.length} programs</p>
+          <h2 class="page-title">Programs &amp; Fields</h2>
+          <p class="page-subtitle" id="progSubtitle">Loading…</p>
         </div>
       </div>
+      <div id="progFilters"></div>
+      <div id="progBody" style="padding:0 28px">
+        <div class="api-loading"><div class="loading-spinner"></div><p>Loading programs…</p></div>
+      </div>
+    </div>`;
+
+  try {
+    const [{ fields, degrees }, data] = await Promise.all([
+      _getProgramLists(),
+      apiGetPrograms({ field: fieldFilter, degree: degreeFilter, limit: 100 }),
+    ]);
+
+    document.getElementById('progSubtitle').textContent =
+      `${fields.length} fields · ${data.total} programs`;
+
+    document.getElementById('progFilters').innerHTML = `
       <div class="filter-bar" style="margin:0 28px 20px">
         <div class="filter-group">
           <label>Field</label>
-          <select class="filter-select" onchange="renderPrograms({field:this.value,degree:'${degreeFilter}'})">
+          <select class="filter-select" id="progField">
             <option value="">All Fields</option>
             ${fields.map(f=>`<option value="${f.id}" ${String(fieldFilter)===String(f.id)?'selected':''}>${escHtml(f.name)}</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
           <label>Degree</label>
-          <select class="filter-select" onchange="renderPrograms({field:'${fieldFilter}',degree:this.value})">
+          <select class="filter-select" id="progDegree">
             <option value="">All Degrees</option>
-            ${degrees.map(d=>`<option value="${d}" ${degreeFilter===d?'selected':''}>${d}</option>`).join('')}
+            ${degrees.map(d=>`<option value="${escHtml(d)}" ${degreeFilter===d?'selected':''}>${escHtml(d)}</option>`).join('')}
           </select>
         </div>
-      </div>
+      </div>`;
+
+    document.getElementById('progField')?.addEventListener('change', e =>
+      renderPrograms({ field: e.target.value, degree: degreeFilter }));
+    document.getElementById('progDegree')?.addEventListener('change', e =>
+      renderPrograms({ field: fieldFilter, degree: e.target.value }));
+
+    const body = document.getElementById('progBody');
+    if (data.programs.length === 0) {
+      body.innerHTML = `<div class="empty-state"><p>No programs match your filters.</p></div>`;
+      return;
+    }
+
+    // Group by field for display
+    const byField = {};
+    data.programs.forEach(p => {
+      (byField[p.field_name] ||= []).push(p);
+    });
+
+    const anyLinked = data.programs.some(p => parseInt(p.university_count) > 0);
+    const notice = anyLinked ? '' : `
+      <div class="unranked-notice" style="margin-bottom:18px">
+        Which universities offer each program hasn't been recorded yet — the catalogue
+        below lists the programs themselves.
+      </div>`;
+
+    body.innerHTML = notice + Object.entries(byField).map(([fieldName, progs]) => `
+      <div class="program-group">
+        <h3 class="program-group-title">${escHtml(fieldName)}</h3>
+        <div class="program-chips-row">
+          ${progs.map(p => {
+            const count = parseInt(p.university_count) || 0;
+            return `
+              <div class="prog-badge">
+                <span class="prog-badge-name">${escHtml(p.name)}</span>
+                <span class="prog-badge-degree ${escHtml(p.degree.toLowerCase())}">${escHtml(p.degree)}</span>
+                ${count > 0 ? `<span class="prog-badge-count">${count} ${count===1?'university':'universities'}</span>` : ''}
+                <button class="prog-search-btn" data-prog="${p.id}">Find Unis</button>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+
+    body.querySelectorAll('[data-prog]').forEach(btn =>
+      btn.addEventListener('click', () => navigateTo('programs', { programId: btn.dataset.prog })));
+
+  } catch (err) {
+    console.error('Programs load error:', err);
+    const body = document.getElementById('progBody');
+    if (body) body.innerHTML = `<div class="empty-state"><p>Could not load programs. Is the server running?</p></div>`;
+  }
+}
+
+// ── Universities offering a single program ─────
+async function _renderProgramUniversities(programId, page=0) {
+  const dv = document.getElementById('dynamicView');
+  dv.innerHTML = `
+    <div class="page-wrap">
+      <div class="page-header"><div><h2 class="page-title">Loading…</h2></div></div>
       <div style="padding:0 28px">
-        ${Object.keys(byField).length === 0
-          ? `<div class="empty-state"><p>No programs match your filters.</p></div>`
-          : Object.entries(byField).map(([fid, progs]) => {
-              const field = FIELDS.find(f=>String(f.id)===String(fid));
-              return `
-                <div class="program-group">
-                  <h3 class="program-group-title">${field?escHtml(field.name):'Unknown Field'}</h3>
-                  <div class="program-chips-row">
-                    ${progs.map(p => `
-                      <div class="prog-badge">
-                        <span class="prog-badge-name">${escHtml(p.name)}</span>
-                        <span class="prog-badge-degree ${p.degree.toLowerCase()}">${p.degree}</span>
-                        <button class="prog-search-btn"
-                          onclick="navigateTo('search',{q:${JSON.stringify(p.name)}})">Find Unis</button>
-                      </div>`).join('')}
-                  </div>
-                </div>`;
-            }).join('')
-        }
+        <div class="api-loading"><div class="loading-spinner"></div><p>Loading universities…</p></div>
       </div>
     </div>`;
+
+  try {
+    const data = await apiGetProgramUniversities(programId, { page, limit: 24 });
+    const p = data.program;
+
+    dv.innerHTML = `
+      <div class="page-wrap">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">${escHtml(p.name)}</h2>
+            <p class="page-subtitle">${escHtml(p.degree)} · ${escHtml(p.field_name)} ·
+              ${data.total} ${data.total===1?'university':'universities'}</p>
+          </div>
+          <button class="ghost-btn" id="progBack">← All programs</button>
+        </div>
+        <div style="padding:0 28px">
+          ${data.universities.length === 0 ? `
+            <div class="empty-state-rich">
+              <h3 class="es-title">No universities linked yet</h3>
+              <p class="es-sub">
+                UNIROUTE doesn't yet record which universities offer
+                ${escHtml(p.name)} (${escHtml(p.degree)}). This list fills in as
+                verified program data is added — nothing here is guessed.
+              </p>
+              <div class="es-actions">
+                <button class="ghost-btn" id="progSearchFallback">Search universities by name instead</button>
+              </div>
+            </div>`
+          : `<div class="uni-grid">${data.universities.map(u=>uniCardHTML(u)).join('')}</div>`}
+        </div>
+        <div id="progPages"></div>
+      </div>`;
+
+    document.getElementById('progBack')?.addEventListener('click', () => navigateTo('programs'));
+    document.getElementById('progSearchFallback')?.addEventListener('click', () => navigateTo('search'));
+
+    const pagesEl = document.getElementById('progPages');
+    if (pagesEl && data.pages > 1) {
+      const mb = (pg,label) => `<button class="page-btn ${pg===page?'active':''}" data-pp="${pg}">${label}</button>`;
+      let html = '';
+      if (page > 0) html += mb(page-1,'‹ Prev');
+      for (let i=Math.max(0,page-2); i<=Math.min(data.pages-1,page+2); i++) html += mb(i,i+1);
+      if (page < data.pages-1) html += mb(page+1,'Next ›');
+      pagesEl.innerHTML = `<div class="pagination">${html}</div>`;
+      pagesEl.querySelectorAll('[data-pp]').forEach(b =>
+        b.addEventListener('click', () => _renderProgramUniversities(programId, parseInt(b.dataset.pp))));
+    }
+  } catch (err) {
+    console.error('Program universities error:', err);
+    dv.innerHTML = `<div class="coming-soon"><h2>Not found</h2><p>This program could not be loaded.</p>
+      <button class="back-btn" onclick="navigateTo('programs')">← All programs</button></div>`;
+  }
 }
 
 // ═══════════════════════════════════════════════

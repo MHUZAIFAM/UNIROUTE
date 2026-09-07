@@ -31,6 +31,46 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/universities/:id/programs — programs offered by a university,
+// grouped by field. Returns an empty list (not an error) when no links exist
+// yet, so the UI can show an honest "not yet available" state.
+router.get('/:id/programs', async (req, res) => {
+  try {
+    const uniId = parseInt(req.params.id);
+    if (!Number.isFinite(uniId)) {
+      return res.status(400).json({ error: 'Invalid university id' });
+    }
+
+    const result = await db.query(
+      `SELECT p.id, p.name, p.degree, f.id AS field_id, f.name AS field_name,
+              up.source, up.url
+       FROM university_programs up
+       JOIN programs p ON p.id = up.program_id
+       JOIN fields   f ON f.id = p.field_id
+       WHERE up.university_id = $1
+       ORDER BY f.name ASC, p.name ASC, p.degree ASC`,
+      [uniId]
+    );
+
+    const byField = [];
+    const index   = new Map();
+    for (const row of result.rows) {
+      if (!index.has(row.field_id)) {
+        index.set(row.field_id, { field_id: row.field_id, field_name: row.field_name, programs: [] });
+        byField.push(index.get(row.field_id));
+      }
+      index.get(row.field_id).programs.push({
+        id: row.id, name: row.name, degree: row.degree, source: row.source, url: row.url,
+      });
+    }
+
+    res.json({ total: result.rows.length, fields: byField });
+  } catch (err) {
+    console.error('GET /api/universities/:id/programs failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/universities/:id — single university
 router.get('/:id', async (req, res) => {
   try {

@@ -22,9 +22,10 @@ async function renderHome() {
 
   try {
     // Load top 8 ranked + stats in parallel
-    const [rankData, countryData] = await Promise.all([
+    const [rankData, countryData, programData] = await Promise.all([
       apiGetRankings({ limit: 8 }),
       apiGetCountries(),
+      apiGetPrograms({ limit: 1 }),
     ]);
 
     // Render university cards
@@ -39,7 +40,7 @@ async function renderHome() {
       'stat-countries': countries,
       'stat-unis':      total.toLocaleString() + '+',
       'stat-ranked':    ranked.toLocaleString(),
-      'stat-programs':  PROGRAMS ? PROGRAMS.length : 64,
+      'stat-programs':  programData.total,
     };
     Object.entries(els).forEach(([id, val]) => {
       const el = document.getElementById(id);

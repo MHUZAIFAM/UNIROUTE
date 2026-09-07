@@ -80,7 +80,10 @@ function _switchTab(tab) {
     const rc = rankColor(_currentUni.rank);
     if (tab === 'overview')   content.innerHTML = _overviewTab(_currentUni, rc);
     if (tab === 'admissions') content.innerHTML = _admissionsTab(_currentUni, rc);
-    if (tab === 'academics')  content.innerHTML = _academicsTab(_currentUni, rc);
+    if (tab === 'academics') {
+      content.innerHTML = _academicsTab(_currentUni, rc);
+      _loadUniversityPrograms(_currentUni);
+    }
   }
 }
 
@@ -140,6 +143,9 @@ function _renderUniversityData(u, activeTab) {
         ${activeTab === 'academics'  ? _academicsTab(u, rc)  : ''}
       </div>
     </div>`;
+
+  // The Academics panel is filled asynchronously from the API
+  if (activeTab === 'academics') _loadUniversityPrograms(u);
 }
 
 // ── Tab 1: Overview ────────────────────────────
@@ -301,24 +307,12 @@ function _academicsTab(u, rc) {
   return `
     <div class="academics-wrap">
 
-      ${u.degrees ? `
       <div class="adm-section">
-        <h3 class="panel-title">Degrees Offered</h3>
-        <div class="degree-chips">
-          ${u.degrees.split(',').map(d => `<span class="degree-chip">${escHtml(d.trim())}</span>`).join('')}
+        <h3 class="panel-title">Programs &amp; Fields</h3>
+        <div id="uniProgramsPanel">
+          <div class="api-loading"><div class="loading-spinner"></div><p>Loading programs…</p></div>
         </div>
-      </div>` : ''}
-
-      ${u.programs ? `
-      <div class="adm-section">
-        <h3 class="panel-title">Programs & Fields</h3>
-        <div class="programs-chips">
-          ${u.programs.split(',').map(p => `
-            <span class="program-chip" onclick="navigateTo('search',{q:${JSON.stringify(p.trim())}})">
-              ${escHtml(p.trim())}
-            </span>`).join('')}
-        </div>
-      </div>` : ''}
+      </div>
 
       ${scores.length > 0 ? `
       <div class="adm-section">
@@ -349,6 +343,50 @@ function _academicsTab(u, rc) {
       </div>` : ''}
 
     </div>`;
+}
+
+// Fills the Academics tab's programs panel. Renders an explicit "not recorded
+// yet" state rather than guessing which programs a university offers.
+async function _loadUniversityPrograms(u) {
+  const panel = document.getElementById('uniProgramsPanel');
+  if (!panel) return;
+
+  try {
+    const data = await apiGetUniversityPrograms(u.id);
+
+    if (data.total === 0) {
+      panel.innerHTML = `
+        <div class="unranked-notice">
+          The programs offered by ${escHtml(u.name)} haven't been recorded yet.
+          Program listings are added from verified sources, so nothing is shown here
+          until they are — check the university's own site in the meantime.
+        </div>`;
+      return;
+    }
+
+    panel.innerHTML = `
+      <p class="results-meta-txt" style="margin-bottom:12px">
+        <strong>${data.total}</strong> ${data.total===1?'program':'programs'}
+        across ${data.fields.length} ${data.fields.length===1?'field':'fields'}
+      </p>
+      ${data.fields.map(f => `
+        <div class="program-group">
+          <h4 class="program-group-title">${escHtml(f.field_name)}</h4>
+          <div class="programs-chips">
+            ${f.programs.map(p => `
+              <span class="program-chip" data-prog="${p.id}">
+                ${escHtml(p.name)} <span class="degree-chip">${escHtml(p.degree)}</span>
+              </span>`).join('')}
+          </div>
+        </div>`).join('')}`;
+
+    panel.querySelectorAll('[data-prog]').forEach(el =>
+      el.addEventListener('click', () => navigateTo('programs', { programId: el.dataset.prog })));
+
+  } catch (err) {
+    console.error('University programs error:', err);
+    panel.innerHTML = `<div class="empty-state"><p>Could not load programs.</p></div>`;
+  }
 }
 
 async function _loadNearby(u) {

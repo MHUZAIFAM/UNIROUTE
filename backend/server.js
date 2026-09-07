@@ -6,6 +6,7 @@ const universitiesRouter = require('./routes/universities');
 const searchRouter       = require('./routes/search');
 const countriesRouter    = require('./routes/countries');
 const rankingsRouter     = require('./routes/rankings');
+const programsRouter     = require('./routes/programs');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +20,7 @@ app.use('/api/universities', universitiesRouter);
 app.use('/api/search',       searchRouter);
 app.use('/api/countries',    countriesRouter);
 app.use('/api/rankings',     rankingsRouter);
+app.use('/api/programs',     programsRouter);
 
 // ── Health check ───────────────────────────────
 app.get('/api/health', (req, res) => {
