@@ -205,3 +205,6 @@ id,name,country,url,domain,verification,verified_on
 10289,Wageningen University & Research,,,wur.nl,batch2 verify: ok,2026-09-08
 5408,Waseda University,,,waseda.jp,batch2 verify: ok,2026-09-08
 10292,Washington University in St. Louis,,,washu.edu,batch2 verify: ok,2026-09-08
+6339,Maastricht University,Netherlands,,maastrichtuniversity.nl,batch3 verify: ok (title 'Maastricht University'),2026-09-08
+10391,Universita Cattolica del Sacro Cuore,Italy,,unicatt.it,batch3 verify: ok (title 'Universita Cattolica del Sacro Cuore'),2026-09-08
+10453,Chandigarh University,India,,cuchd.in,batch3 verify: ok (title names Chandigarh University),2026-09-08
