@@ -83,7 +83,14 @@ function _render(viewId, params={}) {
     case 'university': if(params.id) renderUniversity(params); else renderUniversityBrowser(params); break;
     case 'programs':   renderPrograms(params);   break;
     case 'intake':     renderIntake();           break;
-    default:           renderComingSoon(viewId); break;
+    case 'contact':    renderContact();          break;
+    case 'privacy':    renderPrivacy();          break;
+    // Sidebar entries that exist but aren't built yet stay "coming soon";
+    // anything else is a genuine 404 rather than a promise of a future page.
+    default:
+      if (PLANNED_VIEWS.includes(viewId)) renderComingSoon(viewId);
+      else                                render404(viewId);
+      break;
   }
 
   if (viewId !== 'home') {
@@ -124,9 +131,16 @@ function updateBreadcrumb(viewId, params={}) {
             <span class="bc-sep">›</span>
             <span class="bc-item bc-current">"${escHtml(params.q)}"</span>`;
   } else {
+    const LABELS = { contact:'Contact us', privacy:'Privacy Policy' };
+    const known  = ['home','search','countries','rank','university','programs','intake',
+                    'contact','privacy', ...PLANNED_VIEWS];
+    const label  = LABELS[viewId]
+                || (known.includes(viewId)
+                      ? viewId.charAt(0).toUpperCase()+viewId.slice(1)
+                      : 'Page not found');
     html = `<span class="bc-item" onclick="navigateTo('home')">Home</span>
             <span class="bc-sep">›</span>
-            <span class="bc-item bc-current">${viewId.charAt(0).toUpperCase()+viewId.slice(1)}</span>`;
+            <span class="bc-item bc-current">${escHtml(label)}</span>`;
   }
   bc.innerHTML = html;
 }
